@@ -1,0 +1,21 @@
+<div class="author">
+  <h1 class="author__heading">Wyniki wyszukiwania</h1>
+</div>
+
+<section class="search-results">
+  <% movies.forEach(movie => { %>
+  <div class="movie-card">
+    <img
+      src="https://image.tmdb.org/t/p/w200<%= movie.poster_path %>"
+      alt="<%= movie.title %>"
+    />
+    <h2><%= movie.title %></h2>
+    <p><%= movie.release_date %></p>
+    <% if (isLoggedIn) { %>
+    <a href="/movies/rate?movieId=<%= movie.id %>">Oceń film</a>
+    <% } else { %>
+    <a href="/movies/details?movieId=<%= movie.id %>">Zobacz opis filmu</a>
+    <% } %>
+  </div>
+  <% }) %>
+</section>

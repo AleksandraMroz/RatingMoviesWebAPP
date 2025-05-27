@@ -1,0 +1,19 @@
+<div class="movie-details-page">
+  <h3>Zaloguj się aby ocenić ten film!</h3>
+  <h1><%= movie.title %></h1>
+  <p><%= movie.overview %></p>
+  <p>Premiera: <%= movie.release_date %></p>
+  <h3>Obsada:</h3>
+  <ul>
+    <% if (movie.credits && movie.credits.cast) { %> <%
+    movie.credits.cast.slice(0, 5).forEach(actor => { %>
+    <li><%= actor.name %> jako <%= actor.character %></li>
+    <% }) %> <% } else { %>
+    <li>Brak dostępnych informacji o obsadzie.</li>
+    <% } %>
+  </ul>
+  <img
+    src="https://image.tmdb.org/t/p/w500<%= movie.poster_path %>"
+    alt="<%= movie.title %> "
+  />
+</div>

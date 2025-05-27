@@ -1,0 +1,42 @@
+<div class="movie-info">
+  <div class="movie-details">
+    <img
+      src="https://image.tmdb.org/t/p/w200<%= movie.poster_path %>"
+      alt="<%= movie.title %>"
+    />
+    <p>Premiera: <%= movie.release_date %></p>
+  </div>
+  <div class="movie-rating-form">
+    <div class="movie-header">
+      <h2>Oceń film:</h2>
+      <h2 id="tytul" class="movie-title"><%= movie.title %></h2>
+    </div>
+    <form action="/add-rating" method="POST">
+      <input type="hidden" name="movieId" value="<%= movieId %>" />
+      <label for="rating">Ocena (1-5):</label>
+      <select name="rating" id="rating">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+      <label for="comment">Komentarz:</label>
+      <textarea name="comment" id="comment"></textarea>
+      <button type="submit">Zapisz</button>
+    </form>
+  </div>
+</div>
+<div class="movie-details-page">
+  <h3>Opis:</h3>
+  <p><%= movie.overview %></p>
+  <h3>Obsada:</h3>
+  <ul>
+    <% if (movie.credits && movie.credits.cast) { %> <%
+    movie.credits.cast.slice(0, 5).forEach(actor => { %>
+    <li><%= actor.name %> jako <%= actor.character %></li>
+    <% }) %> <% } else { %>
+    <li>Brak dostępnych informacji o obsadzie.</li>
+    <% } %>
+  </ul>
+</div>

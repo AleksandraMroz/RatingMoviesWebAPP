@@ -1,0 +1,57 @@
+<h2>Zaloguj się do serwisu!</h2>
+<h3>Logowanie</h3>
+
+<% if (locals.errorMessage) { %>
+<div class="error-message">
+  <p><%= locals.errorMessage %></p>
+</div>
+<% } %>
+
+<form action="/admin" method="POST">
+  <label for="username"><b>Nazwa użytkownika</b></label>
+  <input type="text" placeholder="Wprowadź nazwę użytkownika" name="username" />
+
+  <label for="password"><b>Hasło</b></label>
+  <input type="password" placeholder="Wprowadź hasło" name="password" />
+
+  <input type="submit" value="Zaloguj" class="btn" />
+</form>
+
+<h2>Nie masz konta? Załóż je!</h2>
+<h3>Rejestracja</h3>
+<% if (locals.successMessage) { %>
+<div class="success-message">
+  <p><%= locals.successMessage %></p>
+</div>
+<% } %> <% if (locals.errorMessageR) { %>
+<div class="error-message">
+  <p><%= locals.errorMessageR %></p>
+</div>
+<% } %>
+
+<form id="register-form" action="/register" method="POST">
+  <label for="username"><b>Nazwa użytkownika</b></label>
+  <input
+    type="text"
+    placeholder="Wprowadź nazwę użytkownika"
+    name="username"
+    required
+  />
+
+  <label for="password"><b>Hasło</b></label>
+  <input
+    type="password"
+    id="password"
+    placeholder="Wprowadź hasło"
+    name="password"
+    required
+  />
+  <div id="password-hint" style="display: none; color: red; font-size: 0.9rem">
+    * Hasło powinno mieć co najmniej 8 znaków, zawierać wielkie litery, cyfry i
+    znaki specjalne.
+  </div>
+
+  <input type="submit" value="Zarejestruj się" class="btn" />
+</form>
+
+<script src="/js/account.js"></script>

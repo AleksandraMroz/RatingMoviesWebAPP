@@ -1,0 +1,57 @@
+<div class="admin-title">
+  <h2>Witaj, <%= username %>!</h2>
+  <button id="reset-password-btn">Resetuj hasło</button>
+  <button id="delete-account-btn">Usuń konto</button>
+
+  <div id="reset-password-modal" class="modal" style="display: none">
+    <div class="modal-content">
+      <span class="close" id="close-reset">&times;</span>
+      <h2>Resetuj hasło</h2>
+      <form id="reset-password-form" action="/reset-password" method="POST">
+        <label for="new-password">Nowe hasło:</label>
+        <input type="password" id="new-password" name="newPassword" required />
+        <div
+          id="password-hint"
+          style="display: none; color: red; font-size: 0.9rem"
+        >
+          * Hasło powinno mieć co najmniej 8 znaków, zawierać wielkie litery,
+          cyfry i znaki specjalne.
+        </div>
+        <button type="submit" id="confirm-reset-password">
+          Zresetuj hasło
+        </button>
+      </form>
+    </div>
+  </div>
+  <div id="delete-account-modal" class="modal" style="display: none">
+    <div class="modal-content">
+      <span class="close" id="close-delete">&times;</span>
+      <h2>Usuń konto</h2>
+      <p>
+        Czy na pewno chcesz usunąć swoje konto? To działanie jest nieodwracalne.
+      </p>
+      <button id="confirm-delete-account">Potwierdź usunięcie</button>
+    </div>
+  </div>
+  <p>Ocenione filmy: <%= ratedMoviesCount %></p>
+</div>
+
+<div class="reviews">
+  <h3>Twoje recenzje:</h3>
+  <div class="review-grid">
+    <% ratings.forEach(rating => { %>
+    <div class="review-card">
+      <img
+        src="https://image.tmdb.org/t/p/w200<%= rating.posterPath %>"
+        alt="<%= rating.movieTitle %>"
+      />
+      <div class="review-content">
+        <h4><%= rating.movieTitle %></h4>
+        <p>Ocena: <%= rating.rating %></p>
+        <p>Komentarz: <%= rating.comment %></p>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+<script type="text/javascript" defer src="/js/dashboard.js"></script>
