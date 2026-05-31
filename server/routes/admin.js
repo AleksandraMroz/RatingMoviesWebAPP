@@ -10,20 +10,12 @@ const jwtSecret = process.env.JWT_SECRET;
 const API_KEY = "987aea1677d0b14e760954964e938196";
 const Review = require("../models/Review");
 
-/**
- * Check Login
- */
 const authMiddleware = (req, res, next) => {
   const token = req.cookies.token;
-
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
   try {
     const decoded = jwt.verify(token, jwtSecret);
     req.userId = decoded.userId;
-    console.log("User ID:", req.userId); // Dodaj to
     next();
   } catch (error) {
     res.status(401).json({ message: "Unauthorized" });
@@ -31,8 +23,7 @@ const authMiddleware = (req, res, next) => {
 };
 
 /**
- * GET /
- * Admin - Login Page
+ * GET /admin - Login Page
  */
 router.get("/admin", async (req, res) => {
   try {
@@ -40,7 +31,6 @@ router.get("/admin", async (req, res) => {
       title: "Admin",
       description: "Strona, gdzie ocenisz obejrzane filmy",
     };
-
     res.render("admin/index", { locals, layout: adminLayout });
   } catch (error) {
     console.log(error);
@@ -48,8 +38,7 @@ router.get("/admin", async (req, res) => {
 });
 
 /**
- * POST /
- * Admin - Check Login
+ * POST /admin - Check Login
  */
 router.post("/admin", async (req, res) => {
   try {
@@ -83,17 +72,33 @@ router.post("/admin", async (req, res) => {
     });
   }
 });
+
 /**
- * POST /
- * Add Rating
+ * POST /add-rating - Dodaj lub zaktualizuj ocenę
  */
 router.post("/add-rating", authMiddleware, async (req, res) => {
   const { movieId, rating, comment } = req.body;
   const userId = req.userId;
 
   try {
-    const review = new Review({ userId, movieId, rating, comment });
-    await review.save();
+    const movieResponse = await axios.get(
+      `https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=pl-PL`
+    );
+    const movie = movieResponse.data;
+
+    await Review.findOneAndUpdate(
+      { userId, movieId },
+      {
+        userId,
+        movieId,
+        movieTitle: movie.title,
+        posterPath: movie.poster_path,
+        runtime: movie.runtime,
+        rating: Number(rating),
+        comment,
+      },
+      { upsert: true, new: true }
+    );
 
     res.render("ratingSuccess", {
       title: "Ocena dodana",
@@ -105,9 +110,65 @@ router.post("/add-rating", authMiddleware, async (req, res) => {
     res.status(500).send("Error adding rating.");
   }
 });
+
 /**
- * GET /
- * MOVIES RATE
+ * POST /set-watch-status - Ustaw status listy (watched/watchlist/favourite)
+ */
+router.post("/set-watch-status", authMiddleware, async (req, res) => {
+  const { movieId, status } = req.body;
+  const userId = req.userId;
+
+  try {
+    const movieResponse = await axios.get(
+      `https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=pl-PL`
+    );
+    const movie = movieResponse.data;
+
+    const updateData = {
+      userId,
+      movieId,
+      movieTitle: movie.title,
+      posterPath: movie.poster_path,
+      runtime: movie.runtime,
+      watchStatus: status,
+    };
+
+    if (status === "watched") {
+      updateData.watchedDate = new Date();
+    }
+
+    await Review.findOneAndUpdate(
+      { userId, movieId },
+      updateData,
+      { upsert: true, new: true }
+    );
+
+    res.json({ success: true, status });
+  } catch (error) {
+    console.error("Error setting watch status:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /my-status/:movieId - Pobierz status danego filmu dla zalogowanego użytkownika
+ */
+router.get("/my-status/:movieId", authMiddleware, async (req, res) => {
+  const { movieId } = req.params;
+  const userId = req.userId;
+  try {
+    const review = await Review.findOne({ userId, movieId });
+    res.json({
+      watchStatus: review ? review.watchStatus : null,
+      rating: review ? review.rating : null,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /movies/rate
  */
 router.get("/movies/rate", authMiddleware, async (req, res) => {
   const movieId = req.query.movieId;
@@ -120,21 +181,25 @@ router.get("/movies/rate", authMiddleware, async (req, res) => {
     const creditsResponse = await axios.get(
       `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${API_KEY}&language=pl-PL`
     );
-    const credits = creditsResponse.data;
+    movie.credits = creditsResponse.data;
 
-    movie.credits = credits;
-    res.render("movies", { movie, movieId, currentRoute: "/movies/rate" });
+    const existingReview = await Review.findOne({ userId: req.userId, movieId });
+
+    res.render("movies", {
+      movie,
+      movieId,
+      existingReview,
+      currentRoute: "/movies/rate",
+    });
   } catch (error) {
     console.error("Error fetching movie details:", error);
-    res.render("movies", { movie: {}, movieId, currentRoute: "/movies/rate" });
+    res.render("movies", { movie: {}, movieId, existingReview: null, currentRoute: "/movies/rate" });
   }
 });
 
 /**
-
-GET /
-
-Admin Dashboard */
+ * GET /dashboard
+ */
 router.get("/dashboard", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
@@ -147,38 +212,27 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
       });
     }
 
-    // Pobieranie ocen z MongoDB
     const reviews = await Review.find({ userId });
 
-    // Tworzenie tablicy ocen const
-
-    ratingsArray = await Promise.all(
-      reviews
-        .map(async (review) => {
-          try {
-            const response = await axios.get(
-              `https://api.themoviedb.org/3/movie/${review.movieId}?api_key=${API_KEY}&language=pl-PL`
-            );
-            const movie = response.data;
-            return {
-              movieTitle: movie.title,
-              posterPath: movie.poster_path,
-              rating: review.rating,
-              comment: review.comment,
-            };
-          } catch (error) {
-            console.error("Error fetching movie details:", error);
-            return null;
-          }
-        })
-        .filter((rating) => rating !== null)
-    ); // Usuwanie niespełnionych fetchów z tablicy
+    const watched = reviews.filter(r => r.watchStatus === "watched");
+    const watchlist = reviews.filter(r => r.watchStatus === "watchlist");
+    const favourites = reviews.filter(r => r.watchStatus === "favourite");
+    const rated = reviews.filter(r => r.rating != null);
 
     res.render("admin/dashboard", {
       username: user.username,
-      ratedMoviesCount: ratingsArray.length,
-      ratings: ratingsArray,
+      avatarUrl: user.avatarUrl,
+      ratedMoviesCount: rated.length,
+      watchedCount: watched.length,
+      watchlistCount: watchlist.length,
+      favouritesCount: favourites.length,
+      ratings: rated,
+      watched,
+      watchlist,
+      favourites,
       currentRoute: "/dashboard",
+      passwordReset: req.query.passwordReset,
+      error: req.query.error,
     });
   } catch (error) {
     console.error("Error fetching ratings:", error);
@@ -190,45 +244,34 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
 });
 
 /**
- * POST /
- * Admin - Register
+ * POST /register
  */
 router.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-
     try {
-      const user = await User.create({ username, password: hashedPassword });
+      await User.create({ username, password: hashedPassword });
       res.render("admin/index", {
         locals: {
           title: "Admin",
           description: "Strona, gdzie ocenisz obejrzane filmy",
-          successMessage:
-            "Konto zarejestrowane pomyślnie! Teraz możesz się zalogować!",
+          successMessage: "Konto zarejestrowane pomyślnie! Teraz możesz się zalogować!",
         },
         layout: adminLayout,
       });
     } catch (error) {
-      if (error.code === 11000) {
-        res.render("admin/index", {
-          locals: {
-            title: "Admin",
-            description: "Strona, gdzie ocenisz obejrzane filmy",
-            errorMessageR: "Taka nazwa użytkownika jest już zajęta!",
-          },
-          layout: adminLayout,
-        });
-      } else {
-        res.render("admin/index", {
-          locals: {
-            title: "Admin",
-            description: "Strona, gdzie ocenisz obejrzane filmy",
-            errorMessageR: "Nie podano nazwy użytkownika!",
-          },
-          layout: adminLayout,
-        });
-      }
+      const msg = error.code === 11000
+        ? "Taka nazwa użytkownika jest już zajęta!"
+        : "Nie podano nazwy użytkownika!";
+      res.render("admin/index", {
+        locals: {
+          title: "Admin",
+          description: "Strona, gdzie ocenisz obejrzane filmy",
+          errorMessageR: msg,
+        },
+        layout: adminLayout,
+      });
     }
   } catch (error) {
     console.log(error);
@@ -244,57 +287,22 @@ router.post("/register", async (req, res) => {
 });
 
 /**
- * GET /
- * Admin Logout
+ * GET /logout
  */
 router.get("/logout", (req, res) => {
   res.clearCookie("token");
-  req.session.isLoggedIn = false; // Zresetuj stan zalogowania
+  req.session.isLoggedIn = false;
   res.redirect("/");
 });
 
 /**
- * GET /
- * MOVIES DETAILS
- */
-router.get("/movies/details", async (req, res) => {
-  const movieId = req.query.movieId;
-  try {
-    // Pobierz szczegóły filmu
-    const movieResponse = await axios.get(
-      `https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=pl-PL`
-    );
-    const movie = movieResponse.data;
-
-    // Pobierz obsadę filmu (opcjonalnie)
-    const creditsResponse = await axios.get(
-      `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${API_KEY}&language=pl-PL`
-    );
-    const credits = creditsResponse.data;
-    movie.credits = credits;
-
-    res.render("moviedetails", { movie, currentRoute: "/movies/details" });
-  } catch (error) {
-    console.error("Error fetching movie details:", error);
-    res.render("moviedetails", { movie: {}, currentRoute: "/movies/details" });
-  }
-});
-/**
- * GET /
- * RESET PASSWORD
+ * POST /reset-password
  */
 router.post("/reset-password", authMiddleware, async (req, res) => {
   const { newPassword } = req.body;
-
-  // Debugowanie
-  console.log("New Password:", newPassword);
-
   const userId = req.userId;
-
   try {
-    if (!newPassword) {
-      throw new Error("New Password is required.");
-    }
+    if (!newPassword) throw new Error("New Password is required.");
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await User.findByIdAndUpdate(userId, { password: hashedPassword });
     res.redirect("/dashboard?passwordReset=true");
@@ -304,26 +312,14 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/dashboard", authMiddleware, async (req, res) => {
-  res.render("admin/dashboard", {
-    username: user.username,
-    ratedMoviesCount: ratingsArray.length,
-    ratings: ratingsArray,
-    currentRoute: "/dashboard",
-    passwordReset: req.query.passwordReset,
-    error: req.query.error,
-  });
-});
-
 /**
- * GET /
- * DELETE ACCOUNT
+ * POST /delete-account
  */
 router.post("/delete-account", authMiddleware, async (req, res) => {
   const userId = req.userId;
-
   try {
     await User.findByIdAndDelete(userId);
+    await Review.deleteMany({ userId });
     res.clearCookie("token");
     req.session.destroy();
     res.status(200).send("Account deleted successfully.");
@@ -332,4 +328,5 @@ router.post("/delete-account", authMiddleware, async (req, res) => {
     res.status(500).send("Error deleting account.");
   }
 });
+
 module.exports = router;

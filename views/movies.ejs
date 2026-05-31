@@ -1,42 +1,124 @@
 <div class="movie-info">
   <div class="movie-details">
     <img
-      src="https://image.tmdb.org/t/p/w200<%= movie.poster_path %>"
+      src="https://image.tmdb.org/t/p/w300<%= movie.poster_path %>"
       alt="<%= movie.title %>"
     />
-    <p>Premiera: <%= movie.release_date %></p>
   </div>
+
   <div class="movie-rating-form">
-    <div class="movie-header">
-      <h2>Oceń film:</h2>
-      <h2 id="tytul" class="movie-title"><%= movie.title %></h2>
+    <h1 class="movie-title"><%= movie.title %></h1>
+    <p class="movie-meta">
+      Premiera: <%= movie.release_date %>
+      <% if (movie.runtime) { %> &bull; <%= movie.runtime %> min <% } %>
+    </p>
+
+    <!-- Przyciski statusu listy -->
+    <div class="watch-status-buttons" data-movie-id="<%= movieId %>">
+      <button class="status-btn" data-status="watched">
+        ✓ Obejrzane
+      </button>
+      <button class="status-btn" data-status="watchlist">
+        ⏱ Do obejrzenia
+      </button>
+      <button class="status-btn" data-status="favourite">
+        ♥ Ulubione
+      </button>
     </div>
-    <form action="/add-rating" method="POST">
+
+    <!-- Formularz oceny -->
+    <form action="/add-rating" method="POST" class="rating-form">
       <input type="hidden" name="movieId" value="<%= movieId %>" />
-      <label for="rating">Ocena (1-5):</label>
+      <label for="rating">Twoja ocena (1–5):</label>
       <select name="rating" id="rating">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
+        <% for (let i = 1; i <= 5; i++) { %>
+        <option value="<%= i %>" <%= existingReview && existingReview.rating === i ? 'selected' : '' %>><%= i %></option>
+        <% } %>
       </select>
       <label for="comment">Komentarz:</label>
-      <textarea name="comment" id="comment"></textarea>
-      <button type="submit">Zapisz</button>
+      <textarea name="comment" id="comment"><%= existingReview ? existingReview.comment : '' %></textarea>
+      <button type="submit" class="btn">Zapisz ocenę</button>
     </form>
   </div>
 </div>
+
 <div class="movie-details-page">
   <h3>Opis:</h3>
   <p><%= movie.overview %></p>
   <h3>Obsada:</h3>
-  <ul>
-    <% if (movie.credits && movie.credits.cast) { %> <%
-    movie.credits.cast.slice(0, 5).forEach(actor => { %>
-    <li><%= actor.name %> jako <%= actor.character %></li>
-    <% }) %> <% } else { %>
-    <li>Brak dostępnych informacji o obsadzie.</li>
+  <ul class="cast-list">
+    <% if (movie.credits && movie.credits.cast) { %>
+      <% movie.credits.cast.slice(0, 8).forEach(actor => { %>
+      <li><strong><%= actor.name %></strong> jako <%= actor.character %></li>
+      <% }) %>
+    <% } else { %>
+      <li>Brak dostępnych informacji o obsadzie.</li>
     <% } %>
   </ul>
 </div>
+
+<!-- Oceny innych użytkowników -->
+<% if (typeof publicReviews !== 'undefined' && publicReviews.length > 0) { %>
+<div class="public-reviews">
+  <h3>Oceny użytkowników (<%= publicReviews.length %>)</h3>
+  <div class="public-reviews-list">
+    <% publicReviews.forEach(r => { %>
+    <div class="public-review-card">
+      <div class="reviewer-info">
+        <div class="reviewer-avatar">
+          <% if (r.user && r.user.avatarUrl) { %>
+            <img src="<%= r.user.avatarUrl %>" alt="<%= r.user.username %>" />
+          <% } else { %>
+            <div class="avatar-placeholder"><%= r.user ? r.user.username[0].toUpperCase() : '?' %></div>
+          <% } %>
+        </div>
+        <strong><%= r.user ? r.user.username : 'Użytkownik' %></strong>
+      </div>
+      <div class="reviewer-rating">
+        <span class="stars"><%- '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) %></span>
+        <span class="rating-number"><%= r.rating %>/5</span>
+      </div>
+      <% if (r.comment) { %>
+      <p class="reviewer-comment">"<%= r.comment %>"</p>
+      <% } %>
+    </div>
+    <% }) %>
+  </div>
+</div>
+<% } %>
+
+<script>
+const movieId = "<%= movieId %>";
+
+// Pobierz aktualny status przy załadowaniu
+fetch(`/my-status/${movieId}`)
+  .then(r => r.json())
+  .then(data => {
+    if (data.watchStatus) {
+      document.querySelectorAll('.status-btn').forEach(btn => {
+        if (btn.dataset.status === data.watchStatus) btn.classList.add('active');
+      });
+    }
+  })
+  .catch(() => {});
+
+// Obsługa kliknięcia statusu
+document.querySelectorAll('.status-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const status = btn.dataset.status;
+    fetch('/set-watch-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ movieId, status }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+      })
+      .catch(err => console.error(err));
+  });
+});
+</script>

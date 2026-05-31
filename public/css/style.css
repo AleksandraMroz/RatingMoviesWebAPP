@@ -653,6 +653,243 @@ img {
   color: var(--black);
 }
 
+/* ===== DASHBOARD TABS ===== */
+.dashboard-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.stat-chip {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dashboard-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--gray-light);
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--black);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.empty-tab {
+  color: var(--gray);
+  text-align: center;
+  padding: 40px 0;
+  font-size: 1rem;
+}
+
+.review-card-link {
+  text-decoration: none;
+  display: block;
+}
+
+.review-comment {
+  font-size: 0.85rem;
+  color: #9090b0;
+  font-style: italic;
+  margin: 4px 0 0;
+}
+
+.watched-date,
+.runtime {
+  font-size: 0.82rem;
+  color: #9090b0;
+  margin: 4px 0;
+}
+
+.stars {
+  color: #f5c518;
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+
+/* ===== WATCH STATUS BUTTONS ===== */
+.watch-status-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.status-btn {
+  padding: 9px 18px;
+  border: 2px solid var(--gray-light);
+  border-radius: 20px;
+  background: none;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--black);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.status-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.movie-meta {
+  color: var(--gray);
+  font-size: 0.9rem;
+  margin: 4px 0 16px;
+}
+
+.movie-meta-block {
+  flex: 1;
+}
+
+.rating-form {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--gray-light);
+}
+
+.cast-list {
+  list-style: none;
+  padding: 0;
+  font-size: 0.9rem;
+  color: var(--gray);
+}
+
+.cast-list li {
+  padding: 3px 0;
+}
+
+/* ===== PUBLIC REVIEWS ===== */
+.public-reviews {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--gray-light);
+}
+
+.public-reviews h3 {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+}
+
+.public-reviews-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.public-review-card {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  border: 1px solid var(--gray-light);
+}
+
+.reviewer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.reviewer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.reviewer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.reviewer-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rating-number {
+  color: var(--gray);
+  font-size: 0.85rem;
+}
+
+.reviewer-comment {
+  color: var(--gray);
+  font-size: 0.88rem;
+  font-style: italic;
+  margin: 0;
+}
+
+.no-reviews {
+  color: var(--gray);
+  text-align: center;
+  padding: 32px 0;
+}
+
 /* ===== RESPONSIVE ===== */
 @media only screen and (max-width: 768px) {
   .container {

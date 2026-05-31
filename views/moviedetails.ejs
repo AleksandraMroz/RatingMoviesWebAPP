@@ -1,19 +1,61 @@
 <div class="movie-details-page">
-  <h3>Zaloguj się aby ocenić ten film!</h3>
-  <h1><%= movie.title %></h1>
-  <p><%= movie.overview %></p>
-  <p>Premiera: <%= movie.release_date %></p>
-  <h3>Obsada:</h3>
-  <ul>
-    <% if (movie.credits && movie.credits.cast) { %> <%
-    movie.credits.cast.slice(0, 5).forEach(actor => { %>
-    <li><%= actor.name %> jako <%= actor.character %></li>
-    <% }) %> <% } else { %>
-    <li>Brak dostępnych informacji o obsadzie.</li>
-    <% } %>
-  </ul>
-  <img
-    src="https://image.tmdb.org/t/p/w500<%= movie.poster_path %>"
-    alt="<%= movie.title %> "
-  />
+  <div class="movie-info">
+    <div class="movie-details">
+      <img
+        src="https://image.tmdb.org/t/p/w300<%= movie.poster_path %>"
+        alt="<%= movie.title %>"
+      />
+    </div>
+    <div class="movie-meta-block">
+      <h1 class="movie-title"><%= movie.title %></h1>
+      <p class="movie-meta">
+        Premiera: <%= movie.release_date %>
+        <% if (movie.runtime) { %> &bull; <%= movie.runtime %> min<% } %>
+      </p>
+      <p><%= movie.overview %></p>
+      <h3>Obsada:</h3>
+      <ul class="cast-list">
+        <% if (movie.credits && movie.credits.cast) { %>
+          <% movie.credits.cast.slice(0, 8).forEach(actor => { %>
+          <li><strong><%= actor.name %></strong> jako <%= actor.character %></li>
+          <% }) %>
+        <% } else { %>
+          <li>Brak dostępnych informacji o obsadzie.</li>
+        <% } %>
+      </ul>
+      <a href="/movies/rate?movieId=<%= movie.id %>" class="btn">Oceń ten film</a>
+    </div>
+  </div>
+
+  <!-- Oceny użytkowników -->
+  <% if (publicReviews && publicReviews.length > 0) { %>
+  <div class="public-reviews">
+    <h3>Oceny użytkowników (<%= publicReviews.length %>)</h3>
+    <div class="public-reviews-list">
+      <% publicReviews.forEach(r => { %>
+      <div class="public-review-card">
+        <div class="reviewer-info">
+          <div class="reviewer-avatar">
+            <% if (r.user && r.user.avatarUrl) { %>
+              <img src="<%= r.user.avatarUrl %>" alt="<%= r.user.username %>" />
+            <% } else { %>
+              <div class="avatar-placeholder"><%= r.user ? r.user.username[0].toUpperCase() : '?' %></div>
+            <% } %>
+          </div>
+          <strong><%= r.user ? r.user.username : 'Użytkownik' %></strong>
+        </div>
+        <div class="reviewer-rating">
+          <span class="stars"><%- '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) %></span>
+          <span class="rating-number"><%= r.rating %>/5</span>
+        </div>
+        <% if (r.comment) { %>
+        <p class="reviewer-comment">"<%= r.comment %>"</p>
+        <% } %>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } else { %>
+  <p class="no-reviews">Brak ocen dla tego filmu. Bądź pierwszy!</p>
+  <% } %>
 </div>
