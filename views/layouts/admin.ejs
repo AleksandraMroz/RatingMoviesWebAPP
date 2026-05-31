@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -10,10 +10,10 @@
     <script type="text/javascript" defer src="/js/script.js"></script>
   </head>
   <body>
+    <%- include('../partials/header_admin.ejs') %>
     <div class="container">
-      <%- include('../partials/header_admin.ejs') %>
       <main class="main"><%- body %></main>
-      <%- include('../partials/footer.ejs') %>
     </div>
+    <%- include('../partials/footer.ejs') %>
   </body>
 </html>
