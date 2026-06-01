@@ -44,6 +44,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   };
 
+  function showConfirm(msg, onConfirm) {
+    let m = document.getElementById("dash-confirm-modal");
+    if (!m) {
+      m = document.createElement("div"); m.id = "dash-confirm-modal"; m.className = "modal";
+      m.innerHTML = `<div class="modal-content"><h2 id="dash-confirm-msg"></h2><div style="display:flex;gap:12px;justify-content:center;margin-top:16px"><button class="btn btn-delete" id="dash-confirm-ok">Usuń</button><button class="btn btn-ghost" id="dash-confirm-cancel">Anuluj</button></div></div>`;
+      document.body.appendChild(m);
+    }
+    document.getElementById("dash-confirm-msg").textContent = msg;
+    m.style.display = "block";
+    document.getElementById("dash-confirm-ok").onclick = () => { m.style.display = "none"; onConfirm(); };
+    document.getElementById("dash-confirm-cancel").onclick = () => { m.style.display = "none"; };
+    m.onclick = (e) => { if (e.target === m) m.style.display = "none"; };
+  }
+
   function showDashToast(msg, type) {
     const t = document.createElement("div");
     t.className = "toast toast-" + (type === "error" ? "error" : "success");
@@ -163,11 +177,10 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>`).join("");
 
     container.querySelectorAll(".delete-list-btn").forEach(btn => {
-      btn.onclick = async () => {
-        if (!confirm("Usunąć tę listę?")) return;
+      btn.onclick = () => showConfirm("Usunąć tę listę?", async () => {
         await fetch(`/lists/${btn.dataset.id}`, { method: "DELETE" });
         renderLists();
-      };
+      });
     });
 
     container.querySelectorAll(".remove-from-list").forEach(btn => {
