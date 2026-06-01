@@ -365,15 +365,15 @@ router.get("/following", authMiddleware, async (req, res) => {
 
     // Dla każdego obserwowanego zbierz statystyki
     const usersWithStats = await Promise.all(followingUsers.map(async (user) => {
-      const [watchHistory, recentRatings, followersCount] = await Promise.all([
-        WatchHistory.find({ userId: user._id }),
+      const [watchedReviews, recentRatings, followersCount] = await Promise.all([
+        Review.find({ userId: user._id, watchStatus: "watched" }),
         Review.find({ userId: user._id, rating: { $exists: true, $ne: null } })
           .sort({ createdAt: -1 })
           .limit(3),
         Follow.countDocuments({ followingId: user._id }),
       ]);
 
-      const totalMinutes = watchHistory.reduce((sum, w) => sum + (w.runtime || 0), 0);
+      const totalMinutes = watchedReviews.reduce((sum, r) => sum + (r.runtime || 0), 0);
       const totalHours = Math.floor(totalMinutes / 60);
       const remainingMinutes = totalMinutes % 60;
 
@@ -385,7 +385,7 @@ router.get("/following", authMiddleware, async (req, res) => {
         totalMinutes,
         totalHours,
         remainingMinutes,
-        watchedCount: watchHistory.length,
+        watchedCount: watchedReviews.length,
         followersCount,
         recentRatings,
       };
@@ -417,16 +417,17 @@ router.get("/discover", authMiddleware, async (req, res) => {
     const followingIds = new Set(myFollows.map(f => f.followingId.toString()));
 
     const usersWithStats = await Promise.all(allUsers.map(async (user) => {
-      const [watchHistory, followersCount, reviewsCount] = await Promise.all([
-        WatchHistory.find({ userId: user._id }),
+      const [watchedReviews, followersCount, reviewsCount] = await Promise.all([
+        Review.find({ userId: user._id, watchStatus: "watched" }),
         Follow.countDocuments({ followingId: user._id }),
         Review.countDocuments({ userId: user._id, rating: { $exists: true, $ne: null } }),
       ]);
 
-      const totalMinutes = watchHistory.reduce((sum, w) => sum + (w.runtime || 0), 0);
+      const totalMinutes = watchedReviews.reduce((sum, r) => sum + (r.runtime || 0), 0);
       const totalHours = Math.floor(totalMinutes / 60);
 
-      // Zbierz gatunki
+      // Zbierz gatunki z WatchHistory (tam są zapisywane przy nowych wpisach)
+      const watchHistory = await WatchHistory.find({ userId: user._id });
       const genreMap = {};
       watchHistory.forEach(w => {
         (w.genres || []).forEach(g => {
@@ -442,7 +443,7 @@ router.get("/discover", authMiddleware, async (req, res) => {
         lastActiveAt: user.lastActiveAt,
         totalMinutes,
         totalHours,
-        watchedCount: watchHistory.length,
+        watchedCount: watchedReviews.length,
         reviewsCount,
         followersCount,
         topGenre: topGenre ? topGenre[0] : null,
