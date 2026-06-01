@@ -1,57 +1,118 @@
-<h2>Zaloguj się do serwisu!</h2>
-<h3>Logowanie</h3>
+<div class="auth-container">
 
-<% if (locals.errorMessage) { %>
-<div class="error-message">
-  <p><%= locals.errorMessage %></p>
-</div>
-<% } %>
-
-<form action="/admin" method="POST">
-  <label for="username"><b>Nazwa użytkownika</b></label>
-  <input type="text" placeholder="Wprowadź nazwę użytkownika" name="username" />
-
-  <label for="password"><b>Hasło</b></label>
-  <input type="password" placeholder="Wprowadź hasło" name="password" />
-
-  <input type="submit" value="Zaloguj" class="btn" />
-</form>
-
-<h2>Nie masz konta? Załóż je!</h2>
-<h3>Rejestracja</h3>
-<% if (locals.successMessage) { %>
-<div class="success-message">
-  <p><%= locals.successMessage %></p>
-</div>
-<% } %> <% if (locals.errorMessageR) { %>
-<div class="error-message">
-  <p><%= locals.errorMessageR %></p>
-</div>
-<% } %>
-
-<form id="register-form" action="/register" method="POST">
-  <label for="username"><b>Nazwa użytkownika</b></label>
-  <input
-    type="text"
-    placeholder="Wprowadź nazwę użytkownika"
-    name="username"
-    required
-  />
-
-  <label for="password"><b>Hasło</b></label>
-  <input
-    type="password"
-    id="password"
-    placeholder="Wprowadź hasło"
-    name="password"
-    required
-  />
-  <div id="password-hint" style="display: none; color: red; font-size: 0.9rem">
-    * Hasło powinno mieć co najmniej 8 znaków, zawierać wielkie litery, cyfry i
-    znaki specjalne.
+  <!-- Lewa kolumna — branding -->
+  <div class="auth-branding">
+    <a href="/" class="auth-logo">
+      <span>🎬</span>
+      <span>Filmoteka</span>
+    </a>
+    <h2 class="auth-tagline">Twój osobisty<br/>dziennik kinomana</h2>
+    <p class="auth-tagline-sub">Oceniaj filmy, buduj kolekcje,<br/>odkrywaj podobnych widzów.</p>
+    <div class="auth-features">
+      <div class="auth-feature"><span>⭐</span> Oceny i recenzje</div>
+      <div class="auth-feature"><span>📊</span> Dashboard z wykresami</div>
+      <div class="auth-feature"><span>👥</span> Społeczność kinomanów</div>
+      <div class="auth-feature"><span>💡</span> Spersonalizowane rekomendacje</div>
+    </div>
   </div>
 
-  <input type="submit" value="Zarejestruj się" class="btn" />
-</form>
+  <!-- Prawa kolumna — formularze -->
+  <div class="auth-forms">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login-btn">Zaloguj się</button>
+      <button class="auth-tab" id="tab-register-btn">Załóż konto</button>
+    </div>
 
-<script src="/js/account.js"></script>
+    <!-- LOGOWANIE -->
+    <div id="form-login" class="auth-form-section">
+      <h3 class="auth-form-title">Witaj z powrotem</h3>
+      <% if (locals.errorMessage) { %>
+      <div class="auth-alert auth-alert-error"><span>⚠️</span> <%= locals.errorMessage %></div>
+      <% } %>
+      <form action="/admin" method="POST" class="auth-form">
+        <div class="auth-field">
+          <label>Nazwa użytkownika</label>
+          <input type="text" name="username" placeholder="Twoja nazwa użytkownika" required autocomplete="username" />
+        </div>
+        <div class="auth-field">
+          <label>Hasło</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="password-login" name="password" placeholder="••••••••" required autocomplete="current-password" />
+            <button type="button" class="auth-eye" onclick="togglePwd('password-login',this)">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn auth-submit-btn">Zaloguj się →</button>
+      </form>
+      <p class="auth-switch">Nie masz konta? <a href="#" id="go-register">Zarejestruj się</a></p>
+    </div>
+
+    <!-- REJESTRACJA -->
+    <div id="form-register" class="auth-form-section" style="display:none">
+      <h3 class="auth-form-title">Dołącz do Filmoteki</h3>
+      <% if (locals.successMessage) { %>
+      <div class="auth-alert auth-alert-success"><span>✅</span> <%= locals.successMessage %></div>
+      <% } %>
+      <% if (locals.errorMessageR) { %>
+      <div class="auth-alert auth-alert-error"><span>⚠️</span> <%= locals.errorMessageR %></div>
+      <% } %>
+      <form id="register-form" action="/register" method="POST" class="auth-form">
+        <div class="auth-field">
+          <label>Nazwa użytkownika</label>
+          <input type="text" name="username" placeholder="Wybierz nazwę użytkownika" required autocomplete="username" />
+        </div>
+        <div class="auth-field">
+          <label>Hasło</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="password-reg" name="password" placeholder="Min. 8 znaków" required autocomplete="new-password" />
+            <button type="button" class="auth-eye" onclick="togglePwd('password-reg',this)">👁</button>
+          </div>
+          <div class="auth-password-strength" id="pwd-strength"></div>
+        </div>
+        <button type="submit" class="btn auth-submit-btn">Utwórz konto →</button>
+      </form>
+      <p class="auth-switch">Masz już konto? <a href="#" id="go-login">Zaloguj się</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePwd(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type === "text" ? "password" : "text";
+  btn.textContent = el.type === "text" ? "🙈" : "👁";
+}
+
+const loginBtn = document.getElementById("tab-login-btn");
+const registerBtn = document.getElementById("tab-register-btn");
+const formLogin = document.getElementById("form-login");
+const formRegister = document.getElementById("form-register");
+
+function showLogin() {
+  formLogin.style.display = "block"; formRegister.style.display = "none";
+  loginBtn.classList.add("active"); registerBtn.classList.remove("active");
+}
+function showRegister() {
+  formRegister.style.display = "block"; formLogin.style.display = "none";
+  registerBtn.classList.add("active"); loginBtn.classList.remove("active");
+}
+
+loginBtn.onclick = showLogin;
+registerBtn.onclick = showRegister;
+document.getElementById("go-register").onclick = e => { e.preventDefault(); showRegister(); };
+document.getElementById("go-login").onclick = e => { e.preventDefault(); showLogin(); };
+
+document.getElementById("password-reg").addEventListener("input", function() {
+  const v = this.value;
+  let s = 0;
+  if (v.length >= 8) s++;
+  if (/[A-Z]/.test(v)) s++;
+  if (/[0-9]/.test(v)) s++;
+  if (/[^A-Za-z0-9]/.test(v)) s++;
+  const el = document.getElementById("pwd-strength");
+  el.textContent = v ? ["Bardzo słabe","Słabe","Średnie","Dobre","Silne"][s] : "";
+  el.style.color = ["","#ef4444","#f59e0b","#22c55e","#7c3aed"][s] || "#ef4444";
+});
+
+<% if (locals.successMessage) { %>showLogin();<% } %>
+<% if (locals.errorMessageR) { %>showRegister();<% } %>
+</script>

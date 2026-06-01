@@ -283,7 +283,9 @@ const VIZ = {
       .attr("viewBox", `0 0 ${w} ${h}`).attr("width", "100%");
     const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
 
-    const x = d3.scaleBand().domain(data.map(d => d.month)).range([0, iW]).padding(0.35);
+    // Mniej niż 3 miesiące — mniejszy padding żeby słupki nie wyglądały samotnie
+    const barPadding = data.length <= 2 ? 0.6 : 0.35;
+    const x = d3.scaleBand().domain(data.map(d => d.month)).range([0, iW]).padding(barPadding);
     const y = d3.scaleLinear().domain([0, d3.max(data, d => d.hours) * 1.2 || 1]).range([iH, 0]);
 
     // Gradient

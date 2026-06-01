@@ -63,6 +63,10 @@ router.get("/admin", async (req, res) => {
   }
 });
 
+// /register i /login → alias do /admin (ta sama strona logowania/rejestracji)
+router.get("/register", (req, res) => res.redirect("/admin"));
+router.get("/login", (req, res) => res.redirect("/admin"));
+
 /**
  * POST /admin - Check Login
  */
