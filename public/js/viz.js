@@ -98,10 +98,10 @@ const VIZ = {
     // KPI
     const kpis = document.getElementById("viz-kpis");
     if (kpis) kpis.style.display = "grid";
-    this.setKpi("kpi-hours", data.totalHours);
+    this.setKpi("kpi-hours", (data.totalHours).toFixed(1).replace(".",",") + " h");
     this.setKpi("kpi-watched", data.watchedCount);
     this.setKpi("kpi-rated", data.ratedCount);
-    this.setKpi("kpi-watchlist", Math.round(data.watchlistMinutes / 60));
+    this.setKpi("kpi-watchlist", (data.watchlistHours ?? Math.round(data.watchlistMinutes / 60)).toFixed(1).replace(".",",") + " h");
 
     // Pokaż sekcje
     ["viz-charts","viz-row2","viz-row3"].forEach(id => {
@@ -284,7 +284,7 @@ const VIZ = {
     const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
 
     // Mniej niż 3 miesiące — mniejszy padding żeby słupki nie wyglądały samotnie
-    const barPadding = data.length <= 2 ? 0.6 : 0.35;
+    const barPadding = data.length === 1 ? 0.25 : data.length <= 3 ? 0.35 : 0.35;
     const x = d3.scaleBand().domain(data.map(d => d.month)).range([0, iW]).padding(barPadding);
     const y = d3.scaleLinear().domain([0, d3.max(data, d => d.hours) * 1.2 || 1]).range([iH, 0]);
 

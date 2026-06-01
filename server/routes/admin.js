@@ -519,10 +519,11 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
 
     res.json({
       totalMinutes,
-      totalHours: Math.floor(totalMinutes / 60),
+      totalHours: Math.round(totalMinutes / 60 * 10) / 10,
       watchedCount,
       ratedCount,
       watchlistMinutes: watchlistRuntime,
+      watchlistHours: Math.round(watchlistRuntime / 60 * 10) / 10,
       activityData,
       genreData,
       ratingsOverTime,

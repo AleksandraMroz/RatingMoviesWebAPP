@@ -70,8 +70,13 @@
 <% } %>
 
 <script>
+const isLoggedIn = <%= locals.isLoggedIn ? 'true' : 'false' %>;
 document.querySelectorAll('.follow-toggle-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    if (!isLoggedIn) {
+      window.location.href = '/admin';
+      return;
+    }
     const userId = btn.dataset.userId;
     const isFollowing = btn.classList.contains('following');
     fetch(`/follow/${userId}`, { method: isFollowing ? 'DELETE' : 'POST' })
