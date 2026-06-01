@@ -57,7 +57,6 @@
 
   <% if (movies.length === 0 && locals.query && (query.q || query.genre || query.year_from || query.vote_min || query.language)) { %>
     <div class="empty-state">
-      <div class="empty-state-icon">🎬</div>
       <h3>Brak wyników</h3>
       <p>Spróbuj zmienić kryteria wyszukiwania.</p>
     </div>
@@ -65,23 +64,31 @@
   <p class="search-count">Znaleziono <strong><%= movies.length %></strong> filmów</p>
   <div class="search-results-grid">
     <% movies.forEach(movie => { %>
-    <a href="/movies/details?movieId=<%= movie.id %>" class="search-movie-card">
-      <% if (movie.poster_path) { %>
-        <img src="https://image.tmdb.org/t/p/w300<%= movie.poster_path %>" alt="<%= movie.title %>" loading="lazy" />
-      <% } else { %>
-        <div class="search-no-poster">🎬</div>
-      <% } %>
+    <div class="search-movie-card" data-movie-id="<%= movie.id %>" data-movie-title="<%= movie.title.replace(/"/g,'&quot;') %>" data-poster="<%= movie.poster_path || '' %>">
+      <a href="/movies/details?movieId=<%= movie.id %>" class="search-card-poster-link">
+        <% if (movie.poster_path) { %>
+          <img src="https://image.tmdb.org/t/p/w300<%= movie.poster_path %>" alt="<%= movie.title %>" loading="lazy" />
+        <% } else { %>
+          <div class="search-no-poster"></div>
+        <% } %>
+      </a>
       <div class="search-card-info">
-        <h3><%= movie.title %></h3>
+        <h3><a href="/movies/details?movieId=<%= movie.id %>"><%= movie.title %></a></h3>
         <div class="search-card-meta">
-          <% if (movie.release_date) { %><span>📅 <%= movie.release_date.slice(0,4) %></span><% } %>
-          <% if (movie.vote_average) { %><span class="search-vote">⭐ <%= movie.vote_average.toFixed(1) %></span><% } %>
+          <% if (movie.release_date) { %><span><%= movie.release_date.slice(0,4) %></span><% } %>
+          <% if (movie.vote_average) { %><span class="search-vote"><%= movie.vote_average.toFixed(1) %></span><% } %>
         </div>
         <% if (movie.overview) { %>
         <p class="search-card-overview"><%= movie.overview.slice(0, 110) %><% if (movie.overview.length > 110) { %>…<% } %></p>
         <% } %>
+        <div class="card-quick-actions">
+          <button class="cqa-btn cqa-watched" data-movie-id="<%= movie.id %>" data-status="watched" title="Obejrzane">Obejrzane</button>
+          <button class="cqa-btn cqa-watchlist" data-movie-id="<%= movie.id %>" data-status="watchlist" title="Do obejrzenia">Do obejrzenia</button>
+          <button class="cqa-btn cqa-fav" data-movie-id="<%= movie.id %>" data-status="favourite" title="Ulubione">Ulubione</button>
+          <button class="cqa-btn cqa-rate" data-movie-id="<%= movie.id %>" data-movie-title="<%= movie.title.replace(/"/g,'&quot;') %>" title="Oceń film">Oceń</button>
+        </div>
       </div>
-    </a>
+    </div>
     <% }) %>
   </div>
   <% } %>
@@ -106,10 +113,10 @@
           <a class="suggest-item" href="/movies/details?movieId=${m.id}">
             ${m.poster
               ? `<img src="${m.poster}" alt="" />`
-              : '<div class="suggest-no-img">🎬</div>'}
+              : '<div class="suggest-no-img"></div>'}
             <div class="suggest-text">
               <span class="suggest-title">${m.title}</span>
-              <span class="suggest-meta">${m.year || ""}${m.vote ? ` · ⭐ ${m.vote}` : ""}</span>
+              <span class="suggest-meta">${m.year || ""}${m.vote ? ` · ${m.vote}` : ""}</span>
             </div>
           </a>`).join("");
         box.style.display = "block";

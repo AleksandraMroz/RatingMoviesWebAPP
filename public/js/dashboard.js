@@ -140,15 +140,15 @@ document.addEventListener("DOMContentLoaded", function () {
         <div class="list-card-cover">
           ${l.movies.slice(0,4).filter(m => m.posterPath).map(m =>
             `<img src="https://image.tmdb.org/t/p/w92${m.posterPath}" alt="" />`
-          ).join("") || '<span class="list-cover-ph">🎬</span>'}
+          ).join("") || '<span class="list-cover-ph"></span>'}
         </div>
         <div class="list-card-info">
           <div class="list-card-top">
             <h4><a href="/list/${l._id}">${l.name}</a></h4>
-            <span class="list-badge ${l.isPublic ? 'public' : 'private'}">${l.isPublic ? '🌍' : '🔒'}</span>
+            <span class="list-badge ${l.isPublic ? 'public' : 'private'}">${l.isPublic ? 'Publiczna' : 'Prywatna'}</span>
           </div>
           ${l.description ? `<p class="list-card-desc">${l.description}</p>` : ""}
-          <p class="list-card-meta">🎬 ${l.movies.length} filmów</p>
+          <p class="list-card-meta">${l.movies.length} filmów</p>
           ${l.movies.length > 0 ? `
           <div class="list-movies-mini">
             ${l.movies.slice(0,6).map(m => `
@@ -204,10 +204,10 @@ document.addEventListener("DOMContentLoaded", function () {
       <a href="/movies/details?movieId=${m.id}" class="rec-movie-card">
         ${m.poster_path
           ? `<img src="https://image.tmdb.org/t/p/w200${m.poster_path}" alt="${m.title}" loading="lazy" />`
-          : '<div class="rec-no-poster">🎬</div>'}
+          : '<div class="rec-no-poster"></div>'}
         <div class="rec-card-info">
           <span class="rec-title">${m.title}</span>
-          <span class="rec-meta">${m.release_date ? m.release_date.slice(0,4) : ""} · ⭐ ${m.vote_average ? m.vote_average.toFixed(1) : "—"}</span>
+          <span class="rec-meta">${m.release_date ? m.release_date.slice(0,4) : ""} · ${m.vote_average ? m.vote_average.toFixed(1) : "—"}</span>
         </div>
       </a>`).join("") || "<p class='empty-tab'>Brak rekomendacji — oceń więcej filmów!</p>";
 
@@ -226,7 +226,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </a>
         <div class="similar-info">
           <a href="/profile/${s.user.username}" class="similar-username">${s.user.username}</a>
-          <span class="similar-meta">⭐ śr. ${s.avgRating} · ${s.ratedCount} ocen · ${s.genreOverlap} wspólnych gatunków</span>
+          <span class="similar-meta">śr. ${s.avgRating} · ${s.ratedCount} ocen · ${s.genreOverlap} wspólnych gatunków</span>
         </div>
         <div class="similar-score-badge">${s.score}%</div>
         ${!s.isFollowing

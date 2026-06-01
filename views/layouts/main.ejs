@@ -18,5 +18,26 @@
       <main class="main"><%- body %></main>
     </div>
     <%- include('../partials/footer.ejs') %>
+    <!-- Rating Modal (global) -->
+    <div id="rate-modal" class="modal" style="display:none">
+      <div class="modal-content">
+        <span class="close" id="close-rate-modal">&times;</span>
+        <h2 id="rate-modal-title">Oceń film</h2>
+        <form id="rate-modal-form">
+          <input type="hidden" id="rate-modal-movie-id" name="movieId" />
+          <div class="star-picker" id="rate-modal-stars">
+            <span class="star-pick" data-val="1">★</span>
+            <span class="star-pick" data-val="2">★</span>
+            <span class="star-pick" data-val="3">★</span>
+            <span class="star-pick" data-val="4">★</span>
+            <span class="star-pick" data-val="5">★</span>
+            <input type="hidden" id="rate-modal-rating" value="0" />
+          </div>
+          <textarea id="rate-modal-comment" placeholder="Komentarz (opcjonalnie)..." rows="3" style="width:100%;margin-top:12px;padding:8px;border-radius:8px;border:1px solid var(--gray-light);font-family:inherit;font-size:0.9rem;resize:vertical"></textarea>
+          <button type="submit" class="btn" style="width:100%;margin-top:12px">Zapisz ocenę</button>
+        </form>
+      </div>
+    </div>
+    <script src="/js/quickactions.js"></script>
   </body>
 </html>

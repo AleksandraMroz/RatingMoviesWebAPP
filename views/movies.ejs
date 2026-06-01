@@ -1,7 +1,7 @@
 <!-- Toast po ocenieniu -->
 <% if (locals.rated) { %>
 <div class="rating-toast" id="rating-toast">
-  ✅ Ocena została zapisana!
+  Ocena została zapisana!
   <button onclick="document.getElementById('rating-toast').remove()">×</button>
 </div>
 <% } %>
@@ -27,7 +27,7 @@
         ✓ Obejrzane
       </button>
       <button class="status-btn" data-status="watchlist" id="btn-watchlist">
-        ⏱ Do obejrzenia
+        Do obejrzenia
       </button>
       <button class="status-btn status-btn-fav" data-status="favourite" id="btn-favourite">
         ♥ Ulubione
@@ -35,10 +35,10 @@
     </div>
 
     <!-- Przycisk Dodaj do listy -->
-    <button class="btn btn-ghost btn-add-to-list" id="btn-add-to-list">📋 Dodaj do listy</button>
+    <button class="btn btn-ghost btn-add-to-list" id="btn-add-to-list">Dodaj do listy</button>
 
     <!-- Formularz oceny -->
-    <form action="/add-rating" method="POST" class="rating-form">
+    <form id="rating-form-page" class="rating-form">
       <input type="hidden" name="movieId" value="<%= movieId %>" />
       <label for="rating">Twoja ocena (1–5 gwiazdek):</label>
       <div class="star-picker" id="star-picker">
@@ -58,7 +58,7 @@
 <div id="list-modal" class="modal" style="display:none">
   <div class="modal-content">
     <span class="close" id="close-list-modal">&times;</span>
-    <h2>📋 Dodaj do listy</h2>
+    <h2>Dodaj do listy</h2>
     <div id="list-modal-body">Ładowanie list...</div>
     <hr style="margin:16px 0;border-color:var(--gray-light)"/>
     <div class="list-quick-create">
@@ -120,6 +120,31 @@
 const movieId = "<%= movieId %>";
 const movieTitle = "<%= movie.title.replace(/"/g, '&quot;') %>";
 const posterPath = "<%= movie.poster_path || '' %>";
+
+// === Rating form via fetch ===
+const ratingFormPage = document.getElementById("rating-form-page");
+if (ratingFormPage) {
+  ratingFormPage.addEventListener("submit", function(e) {
+    e.preventDefault();
+    const rating = document.getElementById("rating-hidden").value;
+    const comment = document.getElementById("comment").value;
+    fetch("/add-rating", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ movieId, rating, comment }),
+      credentials: "same-origin"
+    }).then(r => {
+      if (r.ok) {
+        const t = document.createElement("div");
+        t.className = "rating-toast";
+        t.textContent = "Ocena została zapisana!";
+        document.body.appendChild(t);
+        setTimeout(() => t.classList.add("toast-hide"), 4000);
+        setTimeout(() => t.remove(), 4500);
+      }
+    }).catch(() => {});
+  });
+}
 
 // === Star picker ===
 const stars = document.querySelectorAll(".star-pick");
@@ -247,7 +272,7 @@ document.getElementById("quick-create-list-btn").addEventListener("click", async
   // Pokaż krótki toast
   const t = document.createElement("div");
   t.className = "rating-toast";
-  t.textContent = `✅ Dodano do listy "${name}"`;
+  t.textContent = `Dodano do listy "${name}"`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 });

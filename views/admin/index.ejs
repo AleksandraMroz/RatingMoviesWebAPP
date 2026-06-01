@@ -3,16 +3,15 @@
   <!-- Lewa kolumna — branding -->
   <div class="auth-branding">
     <a href="/" class="auth-logo">
-      <span>🎬</span>
       <span>Filmoteka</span>
     </a>
     <h2 class="auth-tagline">Twój osobisty<br/>dziennik kinomana</h2>
     <p class="auth-tagline-sub">Oceniaj filmy, buduj kolekcje,<br/>odkrywaj podobnych widzów.</p>
     <div class="auth-features">
-      <div class="auth-feature"><span>⭐</span> Oceny i recenzje</div>
-      <div class="auth-feature"><span>📊</span> Dashboard z wykresami</div>
-      <div class="auth-feature"><span>👥</span> Społeczność kinomanów</div>
-      <div class="auth-feature"><span>💡</span> Spersonalizowane rekomendacje</div>
+      <div class="auth-feature">Oceny i recenzje</div>
+      <div class="auth-feature">Dashboard z wykresami</div>
+      <div class="auth-feature">Społeczność kinomanów</div>
+      <div class="auth-feature">Spersonalizowane rekomendacje</div>
     </div>
   </div>
 
@@ -27,7 +26,7 @@
     <div id="form-login" class="auth-form-section">
       <h3 class="auth-form-title">Witaj z powrotem</h3>
       <% if (locals.errorMessage) { %>
-      <div class="auth-alert auth-alert-error"><span>⚠️</span> <%= locals.errorMessage %></div>
+      <div class="auth-alert auth-alert-error"><%= locals.errorMessage %></div>
       <% } %>
       <form action="/admin" method="POST" class="auth-form">
         <div class="auth-field">
@@ -50,10 +49,10 @@
     <div id="form-register" class="auth-form-section" style="display:none">
       <h3 class="auth-form-title">Dołącz do Filmoteki</h3>
       <% if (locals.successMessage) { %>
-      <div class="auth-alert auth-alert-success"><span>✅</span> <%= locals.successMessage %></div>
+      <div class="auth-alert auth-alert-success"><%= locals.successMessage %></div>
       <% } %>
       <% if (locals.errorMessageR) { %>
-      <div class="auth-alert auth-alert-error"><span>⚠️</span> <%= locals.errorMessageR %></div>
+      <div class="auth-alert auth-alert-error"><%= locals.errorMessageR %></div>
       <% } %>
       <form id="register-form" action="/register" method="POST" class="auth-form">
         <div class="auth-field">

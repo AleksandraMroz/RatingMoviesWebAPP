@@ -1928,15 +1928,18 @@ img {
   flex-direction: column;
 }
 .search-movie-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-card); }
-.search-movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
 .search-no-poster {
   width: 100%; aspect-ratio: 2/3;
   background: var(--card-bg);
   display: flex; align-items: center; justify-content: center;
   font-size: 3rem;
 }
+.search-card-poster-link { display: block; text-decoration: none; }
+.search-card-poster-link img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
 .search-card-info { padding: 12px; flex: 1; }
 .search-card-info h3 { font-size: 0.88rem; margin: 0 0 4px; font-weight: 600; }
+.search-card-info h3 a { color: inherit; text-decoration: none; }
+.search-card-info h3 a:hover { color: var(--accent); }
 .search-card-meta { display: flex; gap: 8px; font-size: 0.78rem; color: var(--gray); margin-bottom: 6px; }
 .search-vote { color: #f59e0b; font-weight: 600; }
 .search-card-overview { font-size: 0.78rem; color: var(--gray); line-height: 1.4; margin: 0; }
@@ -2614,3 +2617,13 @@ img {
   .landing-hero { flex-direction: column; padding: 40px 0 32px; }
   .landing-hero-posters { display: none !important; }
 }
+
+/* === Quick Action Buttons === */
+.card-quick-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.home-card-actions { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 0; }
+.cqa-btn { font-size: 0.72rem; padding: 3px 8px; border-radius: 20px; border: 1px solid var(--gray-light); background: #fff; color: var(--black); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.cqa-btn:hover { border-color: var(--accent); color: var(--accent); }
+.cqa-btn.cqa-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cqa-rate { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+.cqa-rate:hover { opacity: 0.85; }
+.home-movie-card-wrap { position: relative; }

@@ -135,8 +135,7 @@ router.post("/add-rating", authMiddleware, async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // Redirect na szczegóły filmu z flagą sukcesu
-    res.redirect(`/movies/details?movieId=${movieId}&rated=1`);
+    res.json({ ok: true });
   } catch (error) {
     console.error("Error adding rating:", error);
     res.status(500).send("Error adding rating.");

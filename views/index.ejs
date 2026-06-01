@@ -32,9 +32,9 @@
       </div>
     </div>
     <div class="home-quick-actions">
-      <a href="/search" class="btn">🔍 Szukaj filmów</a>
-      <a href="/feed" class="btn btn-ghost">📡 Aktywność</a>
-      <a href="/dashboard" class="btn btn-ghost">📊 Dashboard</a>
+      <a href="/search" class="btn">Szukaj filmów</a>
+      <a href="/feed" class="btn btn-ghost">Aktywność</a>
+      <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
     </div>
   </div>
 
@@ -111,7 +111,7 @@
         <% } %>
         <div class="home-top-info">
           <span class="home-top-title"><%= m.title %></span>
-          <span class="home-top-meta"><% if (m.release_date) { %><%= m.release_date.slice(0,4) %> · <% } %>⭐ <%= m.vote_average.toFixed(1) %></span>
+          <span class="home-top-meta"><% if (m.release_date) { %><%= m.release_date.slice(0,4) %> · <% } %><%= m.vote_average.toFixed(1) %></span>
         </div>
       </a>
       <% }) %>
@@ -120,11 +120,11 @@
 
   <!-- Gatunki -->
   <div class="home-section">
-    <h2>🎭 Przeglądaj gatunki</h2>
+    <h2>Przeglądaj gatunki</h2>
     <div class="home-genres-row">
-      <% [{id:28,name:'Akcja',emoji:'💥'},{id:27,name:'Horror',emoji:'👻'},{id:35,name:'Komedia',emoji:'😂'},{id:18,name:'Dramat',emoji:'🎭'},{id:878,name:'Sci-Fi',emoji:'🚀'},{id:10749,name:'Romans',emoji:'❤️'},{id:53,name:'Thriller',emoji:'🔪'},{id:16,name:'Animacja',emoji:'✨'}].forEach(g => { %>
+      <% [{id:28,name:'Akcja'},{id:27,name:'Horror'},{id:35,name:'Komedia'},{id:18,name:'Dramat'},{id:878,name:'Sci-Fi'},{id:10749,name:'Romans'},{id:53,name:'Thriller'},{id:16,name:'Animacja'}].forEach(g => { %>
       <a href="/search?genre=<%= g.id %>&sort_by=popularity.desc" class="home-genre-chip">
-        <span><%= g.emoji %></span><span><%= g.name %></span>
+        <span><%= g.name %></span>
       </a>
       <% }) %>
     </div>
@@ -145,7 +145,7 @@
       <p class="landing-sub">Oceniaj filmy, buduj kolekcje, śledź co oglądają znajomi.<br/>Wszystko w jednym miejscu.</p>
       <div class="landing-cta">
         <a href="/register" class="btn landing-btn-primary">Zacznij za darmo</a>
-        <a href="/search" class="btn btn-ghost landing-btn-ghost">🔍 Przeglądaj filmy</a>
+        <a href="/search" class="btn btn-ghost landing-btn-ghost">Przeglądaj filmy</a>
       </div>
     </div>
     <div class="landing-hero-posters">
@@ -165,14 +165,13 @@
   <!-- Features -->
   <div class="landing-features">
     <% [
-      {icon:'⭐',title:'Oceniaj i recenzuj',desc:'Gwiazdkowa skala ocen i miejsce na komentarz przy każdym filmie'},
-      {icon:'📋',title:'Własne listy',desc:'Twórz tematyczne listy i dziel się nimi ze znajomymi'},
-      {icon:'📊',title:'Dashboard z wykresami',desc:'Twoje statystyki — gatunki, czas oglądania, aktywność'},
-      {icon:'👥',title:'Społeczność',desc:'Obserwuj znajomych i śledź ich filmową aktywność'},
-      {icon:'🏆',title:'Osiągnięcia',desc:'Zbieraj odznaki za swoje filmowe milestone'},
+      {title:'Oceniaj i recenzuj',desc:'Gwiazdkowa skala ocen i miejsce na komentarz przy każdym filmie'},
+      {title:'Własne listy',desc:'Twórz tematyczne listy i dziel się nimi ze znajomymi'},
+      {title:'Dashboard z wykresami',desc:'Twoje statystyki — gatunki, czas oglądania, aktywność'},
+      {title:'Społeczność',desc:'Obserwuj znajomych i śledź ich filmową aktywność'},
+      {title:'Osiągnięcia',desc:'Zbieraj odznaki za swoje filmowe milestone'},
     ].forEach(f => { %>
     <div class="landing-feature">
-      <span class="feature-icon"><%= f.icon %></span>
       <h3><%= f.title %></h3>
       <p><%= f.desc %></p>
     </div>
@@ -182,7 +181,7 @@
   <!-- Popularne filmy -->
   <div class="home-section" style="margin-top:48px">
     <div class="home-section-header">
-      <h2>🔥 Popularne teraz</h2>
+      <h2>Popularne teraz</h2>
       <a href="/search" class="home-see-all">Zobacz więcej →</a>
     </div>
     <div class="home-movies-row">
@@ -191,10 +190,10 @@
         <% if (m.poster_path) { %>
           <img src="https://image.tmdb.org/t/p/w300<%= m.poster_path %>" alt="<%= m.title %>" loading="lazy" />
         <% } else { %>
-          <div class="home-no-poster">🎬</div>
+          <div class="home-no-poster"></div>
         <% } %>
         <div class="home-movie-meta">
-          <% if (m.vote_average) { %><span class="home-vote">⭐ <%= m.vote_average.toFixed(1) %></span><% } %>
+          <% if (m.vote_average) { %><span class="home-vote"><%= m.vote_average.toFixed(1) %></span><% } %>
         </div>
         <span class="home-movie-title"><%= m.title %></span>
       </a>

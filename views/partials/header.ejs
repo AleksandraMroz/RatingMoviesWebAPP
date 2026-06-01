@@ -72,10 +72,10 @@
         const data = await res.json();
         suggestBox.innerHTML = data.map(m => `
           <a class="nav-suggest-item" href="/movies/details?movieId=${m.id}">
-            ${m.poster ? `<img src="${m.poster}" alt="" />` : '<span class="nav-suggest-img-ph">🎬</span>'}
+            ${m.poster ? `<img src="${m.poster}" alt="" />` : '<span class="nav-suggest-img-ph">Film</span>'}
             <div>
               <div class="nav-suggest-title">${m.title}</div>
-              <div class="nav-suggest-meta">${m.year || ""}${m.vote ? ` · ⭐${m.vote}` : ""}</div>
+              <div class="nav-suggest-meta">${m.year || ""}${m.vote ? ` · ${m.vote}` : ""}</div>
             </div>
           </a>`).join("");
       } catch {}
