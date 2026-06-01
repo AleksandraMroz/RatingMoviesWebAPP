@@ -59,17 +59,25 @@
     }).catch(()=>{});
 
   function setStatus(status) {
+    // Toggle: jeśli już aktywny → wyślij "none" żeby odklikać
+    let sendStatus = status;
+    if (status === "watched" && watched.classList.contains("active")) sendStatus = "none";
+    else if (status === "watchlist" && watchlist.classList.contains("active")) sendStatus = "none";
+    else if (status === "favourite") sendStatus = fav.classList.contains("active") ? "unfavourite" : "favourite";
+
     fetch("/set-watch-status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ movieId, status }),
+      body: JSON.stringify({ movieId, status: sendStatus }),
       credentials: "same-origin"
     }).then(r => {
       if (r.status === 401) { window.location.href = "/admin"; return; }
       if (r.ok) {
-        if (status === "watched") { watched.classList.add("active"); watchlist.classList.remove("active"); }
-        else if (status === "watchlist") { watchlist.classList.add("active"); watched.classList.remove("active"); }
-        else if (status === "favourite") { fav.classList.toggle("active"); }
+        if (sendStatus === "watched") { watched.classList.add("active"); watchlist.classList.remove("active"); }
+        else if (sendStatus === "watchlist") { watchlist.classList.add("active"); watched.classList.remove("active"); }
+        else if (sendStatus === "none") { watched.classList.remove("active"); watchlist.classList.remove("active"); }
+        else if (sendStatus === "favourite") { fav.classList.add("active"); }
+        else if (sendStatus === "unfavourite") { fav.classList.remove("active"); }
       }
     });
   }
