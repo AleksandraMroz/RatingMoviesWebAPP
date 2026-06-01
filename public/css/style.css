@@ -757,7 +757,7 @@ img {
   text-align: center;
 }
 .modal-content h2 {
-  color: var(--text);
+  color: var(--black);
 }
 
 .close {
