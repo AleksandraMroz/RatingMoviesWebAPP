@@ -756,6 +756,9 @@ img {
   max-width: 480px;
   text-align: center;
 }
+.modal-content h2 {
+  color: var(--text);
+}
 
 .close {
   color: var(--gray);

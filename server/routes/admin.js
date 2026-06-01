@@ -349,6 +349,16 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
 router.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
+    if (!password || password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      return res.render("admin/index", {
+        locals: {
+          title: "Admin",
+          description: "Strona, gdzie ocenisz obejrzane filmy",
+          errorMessageR: "Hasło musi mieć min. 8 znaków, wielką literę, cyfrę i znak specjalny.",
+        },
+        layout: adminLayout,
+      });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     try {
       await User.create({ username, password: hashedPassword });
