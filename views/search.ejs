@@ -1,21 +1,124 @@
-<div class="author">
-  <h1 class="author__heading">Wyniki wyszukiwania</h1>
+<div class="search-page">
+  <div class="search-hero">
+    <h1>Wyszukaj film</h1>
+
+    <form action="/search" method="GET" class="search-advanced-form">
+      <div class="search-main-row">
+        <div class="search-input-wrap">
+          <input
+            type="text"
+            name="q"
+            id="search-q"
+            value="<%= locals.query && query.q ? query.q : '' %>"
+            placeholder="Tytuł filmu..."
+            autocomplete="off"
+          />
+          <div id="search-suggestions" class="search-suggestions" style="display:none"></div>
+        </div>
+        <button type="submit" class="btn search-submit-btn">Szukaj</button>
+      </div>
+
+      <div class="search-filters">
+        <select name="genre">
+          <option value="">Gatunek</option>
+          <% genres.forEach(g => { %>
+          <option value="<%= g.id %>" <%= (locals.query && query.genre == g.id) ? 'selected' : '' %>><%= g.name %></option>
+          <% }) %>
+        </select>
+
+        <input type="number" name="year_from" placeholder="Rok od" min="1900" max="2030"
+          value="<%= locals.query && query.year_from ? query.year_from : '' %>" />
+        <input type="number" name="year_to" placeholder="Rok do" min="1900" max="2030"
+          value="<%= locals.query && query.year_to ? query.year_to : '' %>" />
+
+        <select name="vote_min">
+          <option value="">Ocena TMDB ≥</option>
+          <% [5,6,7,7.5,8,8.5,9].forEach(v => { %>
+          <option value="<%= v %>" <%= (locals.query && Number(query.vote_min) === v) ? 'selected' : '' %>><%= v %>+</option>
+          <% }) %>
+        </select>
+
+        <select name="language">
+          <option value="">Język</option>
+          <% [['pl','Polski'],['en','Angielski'],['fr','Francuski'],['de','Niemiecki'],['es','Hiszpański'],['ko','Koreański'],['ja','Japoński']].forEach(([code,label]) => { %>
+          <option value="<%= code %>" <%= (locals.query && query.language === code) ? 'selected' : '' %>><%= label %></option>
+          <% }) %>
+        </select>
+
+        <select name="sort_by">
+          <option value="popularity.desc" <%= (!locals.query || !query.sort_by || query.sort_by === 'popularity.desc') ? 'selected' : '' %>>Popularność ↓</option>
+          <option value="vote_average.desc" <%= (locals.query && query.sort_by === 'vote_average.desc') ? 'selected' : '' %>>Ocena TMDB ↓</option>
+          <option value="release_date.desc" <%= (locals.query && query.sort_by === 'release_date.desc') ? 'selected' : '' %>>Najnowsze</option>
+          <option value="release_date.asc" <%= (locals.query && query.sort_by === 'release_date.asc') ? 'selected' : '' %>>Najstarsze</option>
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <% if (movies.length === 0 && locals.query && (query.q || query.genre || query.year_from || query.vote_min || query.language)) { %>
+    <div class="empty-state">
+      <div class="empty-state-icon">🎬</div>
+      <h3>Brak wyników</h3>
+      <p>Spróbuj zmienić kryteria wyszukiwania.</p>
+    </div>
+  <% } else if (movies.length > 0) { %>
+  <p class="search-count">Znaleziono <strong><%= movies.length %></strong> filmów</p>
+  <div class="search-results-grid">
+    <% movies.forEach(movie => { %>
+    <a href="/movies/details?movieId=<%= movie.id %>" class="search-movie-card">
+      <% if (movie.poster_path) { %>
+        <img src="https://image.tmdb.org/t/p/w300<%= movie.poster_path %>" alt="<%= movie.title %>" loading="lazy" />
+      <% } else { %>
+        <div class="search-no-poster">🎬</div>
+      <% } %>
+      <div class="search-card-info">
+        <h3><%= movie.title %></h3>
+        <div class="search-card-meta">
+          <% if (movie.release_date) { %><span>📅 <%= movie.release_date.slice(0,4) %></span><% } %>
+          <% if (movie.vote_average) { %><span class="search-vote">⭐ <%= movie.vote_average.toFixed(1) %></span><% } %>
+        </div>
+        <% if (movie.overview) { %>
+        <p class="search-card-overview"><%= movie.overview.slice(0, 110) %><% if (movie.overview.length > 110) { %>…<% } %></p>
+        <% } %>
+      </div>
+    </a>
+    <% }) %>
+  </div>
+  <% } %>
 </div>
 
-<section class="search-results">
-  <% movies.forEach(movie => { %>
-  <div class="movie-card">
-    <img
-      src="https://image.tmdb.org/t/p/w200<%= movie.poster_path %>"
-      alt="<%= movie.title %>"
-    />
-    <h2><%= movie.title %></h2>
-    <p><%= movie.release_date %></p>
-    <% if (isLoggedIn) { %>
-    <a href="/movies/rate?movieId=<%= movie.id %>">Oceń film</a>
-    <% } else { %>
-    <a href="/movies/details?movieId=<%= movie.id %>">Zobacz opis filmu</a>
-    <% } %>
-  </div>
-  <% }) %>
-</section>
+<script>
+(function() {
+  const input = document.getElementById("search-q");
+  const box = document.getElementById("search-suggestions");
+  let timer = null;
+
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    const val = input.value.trim();
+    if (val.length < 2) { box.innerHTML = ""; box.style.display = "none"; return; }
+    timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search-suggest?q=${encodeURIComponent(val)}`);
+        const data = await res.json();
+        if (!data.length) { box.style.display = "none"; return; }
+        box.innerHTML = data.map(m => `
+          <a class="suggest-item" href="/movies/details?movieId=${m.id}">
+            ${m.poster
+              ? `<img src="${m.poster}" alt="" />`
+              : '<div class="suggest-no-img">🎬</div>'}
+            <div class="suggest-text">
+              <span class="suggest-title">${m.title}</span>
+              <span class="suggest-meta">${m.year || ""}${m.vote ? ` · ⭐ ${m.vote}` : ""}</span>
+            </div>
+          </a>`).join("");
+        box.style.display = "block";
+      } catch {}
+    }, 250);
+  });
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".search-input-wrap")) box.style.display = "none";
+  });
+})();
+</script>

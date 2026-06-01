@@ -1,0 +1,52 @@
+<div class="feed-page">
+  <h2 class="page-title">Aktywność znajomych</h2>
+
+  <% if (isEmpty) { %>
+  <div class="empty-state">
+    <div class="empty-state-icon">👥</div>
+    <h3>Nie obserwujesz jeszcze nikogo</h3>
+    <p>Przejdź do <a href="/discover">Odkryj</a>, żeby znaleźć kinomanów o podobnych gustach!</p>
+  </div>
+  <% } else if (feed.length === 0) { %>
+  <div class="empty-state">
+    <div class="empty-state-icon">🎬</div>
+    <h3>Brak aktywności</h3>
+    <p>Obserwowani użytkownicy nie ocenili jeszcze żadnych filmów.</p>
+  </div>
+  <% } else { %>
+  <div class="feed-list">
+    <% feed.forEach(item => { %>
+    <div class="feed-item">
+      <a href="/profile/<%= item.user.username %>" class="feed-avatar">
+        <% if (item.user.avatarUrl) { %>
+          <img src="<%= item.user.avatarUrl %>" alt="<%= item.user.username %>" />
+        <% } else { %>
+          <div class="avatar-placeholder"><%= item.user.username[0].toUpperCase() %></div>
+        <% } %>
+      </a>
+      <div class="feed-content">
+        <div class="feed-header">
+          <a href="/profile/<%= item.user.username %>" class="feed-username"><%= item.user.username %></a>
+          <% if (item.type === 'rating') { %>
+            <span class="feed-action">ocenił/a</span>
+            <span class="feed-stars"><%- '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating) %></span>
+          <% } else { %>
+            <span class="feed-action">obejrzał/a</span>
+          <% } %>
+          <span class="feed-date"><%= new Date(item.date).toLocaleDateString('pl-PL') %></span>
+        </div>
+        <a href="/movies/details?movieId=<%= item.movieId %>" class="feed-movie">
+          <% if (item.posterPath) { %>
+            <img src="https://image.tmdb.org/t/p/w92<%= item.posterPath %>" alt="<%= item.movieTitle %>" />
+          <% } %>
+          <span><%= item.movieTitle %></span>
+        </a>
+        <% if (item.comment) { %>
+        <p class="feed-comment">"<%= item.comment %>"</p>
+        <% } %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>

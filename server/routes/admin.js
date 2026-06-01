@@ -792,4 +792,268 @@ router.post("/delete-account", authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * GET /feed — social feed (aktywność obserwowanych)
+ */
+router.get("/feed", authMiddleware, async (req, res) => {
+  try {
+    const follows = await Follow.find({ followerId: req.userId }).select("followingId");
+    const followingIds = follows.map(f => f.followingId);
+
+    // Ostatnie oceny + zmiany statusu od obserwowanych (max 40 wpisów łącznie)
+    const [recentReviews, recentWatched] = await Promise.all([
+      Review.find({
+        userId: { $in: followingIds },
+        rating: { $ne: null },
+      })
+        .populate("userId", "username avatarUrl")
+        .sort({ updatedAt: -1 })
+        .limit(25),
+      WatchHistory.find({ userId: { $in: followingIds } })
+        .populate("userId", "username avatarUrl")
+        .sort({ watchedAt: -1 })
+        .limit(25),
+    ]);
+
+    // Łącz i sortuj po dacie
+    const feed = [
+      ...recentReviews.map(r => ({
+        type: "rating",
+        user: r.userId,
+        movieTitle: r.movieTitle,
+        movieId: r.movieId,
+        posterPath: r.posterPath,
+        rating: r.rating,
+        comment: r.comment,
+        date: r.updatedAt,
+      })),
+      ...recentWatched.map(w => ({
+        type: "watched",
+        user: w.userId,
+        movieTitle: w.movieTitle,
+        movieId: w.movieId,
+        posterPath: w.posterPath,
+        date: w.watchedAt,
+      })),
+    ]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 40);
+
+    res.render("feed", {
+      feed,
+      isEmpty: followingIds.length === 0,
+      currentRoute: "/feed",
+    });
+  } catch (error) {
+    console.error(error);
+    res.render("feed", { feed: [], isEmpty: true, currentRoute: "/feed" });
+  }
+});
+
+/**
+ * GET /api/recommendations — rekomendacje na podstawie gatunków i ocen
+ */
+router.get("/api/recommendations", authMiddleware, async (req, res) => {
+  try {
+    const reviews = await Review.find({ userId: req.userId, rating: { $gte: 4 } });
+    const watchHistory = await WatchHistory.find({ userId: req.userId });
+
+    // Zbierz ulubione gatunki (z wysoko ocenionych filmów)
+    const genreCount = {};
+    watchHistory.forEach(w => {
+      if (w.genres) w.genres.forEach(g => {
+        genreCount[g.id] = (genreCount[g.id] || 0) + 1;
+      });
+    });
+
+    const topGenres = Object.entries(genreCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id]) => id);
+
+    const seenMovieIds = new Set([
+      ...reviews.map(r => String(r.movieId)),
+      ...watchHistory.map(w => String(w.movieId)),
+    ]);
+
+    if (topGenres.length === 0) {
+      // Fallback: popularne filmy
+      const resp = await axios.get(
+        `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=pl-PL&page=1`
+      );
+      const movies = (resp.data.results || [])
+        .filter(m => !seenMovieIds.has(String(m.id)))
+        .slice(0, 12);
+      return res.json({ movies, genres: [] });
+    }
+
+    // Pobierz filmy z top gatunków
+    const [resp1, resp2] = await Promise.all([
+      axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=pl-PL&sort_by=vote_average.desc&vote_count.gte=100&with_genres=${topGenres[0]}&page=1`),
+      topGenres[1]
+        ? axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=pl-PL&sort_by=vote_average.desc&vote_count.gte=100&with_genres=${topGenres[1]}&page=1`)
+        : Promise.resolve({ data: { results: [] } }),
+    ]);
+
+    const candidates = [
+      ...(resp1.data.results || []),
+      ...(resp2.data.results || []),
+    ]
+      .filter(m => !seenMovieIds.has(String(m.id)))
+      .sort((a, b) => b.vote_average - a.vote_average);
+
+    // Deduplicate
+    const seen = new Set();
+    const movies = candidates.filter(m => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    }).slice(0, 12);
+
+    res.json({ movies, topGenres });
+  } catch (error) {
+    console.error(error);
+    res.json({ movies: [], topGenres: [] });
+  }
+});
+
+/**
+ * GET /api/similar-users — użytkownicy o podobnych gustach
+ */
+router.get("/api/similar-users", authMiddleware, async (req, res) => {
+  try {
+    const myReviews = await Review.find({ userId: req.userId, rating: { $ne: null } });
+    const myWatchHistory = await WatchHistory.find({ userId: req.userId });
+
+    // Moje ulubione gatunki
+    const myGenres = {};
+    myWatchHistory.forEach(w => (w.genres || []).forEach(g => {
+      myGenres[g.id] = (myGenres[g.id] || 0) + 1;
+    }));
+    const myTopGenres = new Set(
+      Object.entries(myGenres).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => id)
+    );
+
+    const myAvgRating = myReviews.length
+      ? myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length
+      : 3;
+
+    // Wszyscy inni użytkownicy
+    const follows = await Follow.find({ followerId: req.userId }).select("followingId");
+    const alreadyFollowing = new Set(follows.map(f => f.followingId.toString()));
+
+    const allUsers = await User.find({ _id: { $ne: req.userId } }).select("_id username avatarUrl").limit(50);
+
+    const scores = await Promise.all(allUsers.map(async (u) => {
+      const [uHistory, uReviews] = await Promise.all([
+        WatchHistory.find({ userId: u._id }, "genres"),
+        Review.find({ userId: u._id, rating: { $ne: null } }, "rating"),
+      ]);
+
+      const uGenres = {};
+      uHistory.forEach(w => (w.genres || []).forEach(g => {
+        uGenres[g.id] = (uGenres[g.id] || 0) + 1;
+      }));
+      const uTopGenres = new Set(
+        Object.entries(uGenres).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => id)
+      );
+
+      // Overlap gatunków (Jaccard)
+      const intersection = [...myTopGenres].filter(g => uTopGenres.has(g)).length;
+      const union = new Set([...myTopGenres, ...uTopGenres]).size;
+      const genreScore = union > 0 ? intersection / union : 0;
+
+      // Podobieństwo średniej oceny
+      const uAvg = uReviews.length
+        ? uReviews.reduce((s, r) => s + r.rating, 0) / uReviews.length
+        : 3;
+      const ratingScore = 1 - Math.abs(myAvgRating - uAvg) / 5;
+
+      const score = genreScore * 0.7 + ratingScore * 0.3;
+
+      return {
+        user: { _id: u._id, username: u.username, avatarUrl: u.avatarUrl },
+        score: Math.round(score * 100),
+        genreOverlap: intersection,
+        avgRating: uAvg.toFixed(1),
+        ratedCount: uReviews.length,
+        isFollowing: alreadyFollowing.has(u._id.toString()),
+      };
+    }));
+
+    const similar = scores
+      .filter(s => s.ratedCount >= 3 && s.score > 10)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
+
+    res.json(similar);
+  } catch (error) {
+    console.error(error);
+    res.json([]);
+  }
+});
+
+/**
+ * GET /api/community-stats — statystyki porównawcze
+ */
+router.get("/api/community-stats", authMiddleware, async (req, res) => {
+  try {
+    const [myReviews, allReviews, myWatchHistory, communityWatchHistory] = await Promise.all([
+      Review.find({ userId: req.userId, rating: { $ne: null } }),
+      Review.find({ rating: { $ne: null } }),
+      WatchHistory.find({ userId: req.userId }),
+      WatchHistory.find({}),
+    ]);
+
+    const myAvg = myReviews.length
+      ? (myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length).toFixed(2)
+      : null;
+    const communityAvg = allReviews.length
+      ? (allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length).toFixed(2)
+      : null;
+
+    // Rozkład ocen społeczności
+    const communityDist = [1,2,3,4,5].map(n => ({
+      rating: n,
+      count: allReviews.filter(r => r.rating === n).length,
+    }));
+
+    // Moje minuty vs średnia
+    const myMinutes = myWatchHistory.reduce((s, w) => s + (w.runtime || 0), 0);
+
+    const userMinutesMap = {};
+    communityWatchHistory.forEach(w => {
+      userMinutesMap[w.userId] = (userMinutesMap[w.userId] || 0) + (w.runtime || 0);
+    });
+    const minutesList = Object.values(userMinutesMap);
+    const avgMinutes = minutesList.length
+      ? Math.round(minutesList.reduce((s, m) => s + m, 0) / minutesList.length)
+      : 0;
+
+    // Top gatunki społeczności
+    const allGenreCounts = {};
+    communityWatchHistory.forEach(w => (w.genres || []).forEach(g => {
+      allGenreCounts[g.name] = (allGenreCounts[g.name] || 0) + 1;
+    }));
+    const topCommunityGenres = Object.entries(allGenreCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+
+    res.json({
+      myAvg: Number(myAvg),
+      communityAvg: Number(communityAvg),
+      communityDist,
+      myRatedCount: myReviews.length,
+      communityRatedCount: allReviews.length,
+      myMinutes,
+      avgMinutes,
+      topCommunityGenres,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({});
+  }
+});
+
 module.exports = router;

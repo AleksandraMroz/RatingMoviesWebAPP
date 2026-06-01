@@ -7,50 +7,86 @@
 
     <nav class="header__nav">
       <ul>
-        <li>
-          <a href="/" class="<%= isActiveRoute('/', currentRoute) %>">Główna</a>
-        </li>
+        <li><a href="/" class="<%= isActiveRoute('/', currentRoute) %>">Główna</a></li>
         <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
-        <li>
-          <a href="/dashboard" class="<%= isActiveRoute('/dashboard', currentRoute) %>">Mój profil</a>
-        </li>
-        <li>
-          <a href="/following" class="<%= isActiveRoute('/following', currentRoute) %>">Obserwowane</a>
-        </li>
-        <li>
-          <a href="/discover" class="<%= isActiveRoute('/discover', currentRoute) %>">Odkryj</a>
-        </li>
+        <li><a href="/dashboard" class="<%= isActiveRoute('/dashboard', currentRoute) %>">Mój profil</a></li>
+        <li><a href="/feed" class="<%= isActiveRoute('/feed', currentRoute) %>">Feed</a></li>
+        <li><a href="/following" class="<%= isActiveRoute('/following', currentRoute) %>">Obserwowane</a></li>
+        <li><a href="/discover" class="<%= isActiveRoute('/discover', currentRoute) %>">Odkryj</a></li>
         <% } else { %>
-        <li>
-          <a href="/about" class="<%= isActiveRoute('/about', currentRoute) %>">O nas</a>
-        </li>
-        <li>
-          <a href="/contact" class="<%= isActiveRoute('/contact', currentRoute) %>">Kontakt</a>
-        </li>
+        <li><a href="/about" class="<%= isActiveRoute('/about', currentRoute) %>">O nas</a></li>
+        <li><a href="/contact" class="<%= isActiveRoute('/contact', currentRoute) %>">Kontakt</a></li>
         <% } %>
       </ul>
     </nav>
 
     <div class="nav-right">
-      <div class="header__button">
-        <button class="searchBtn" aria-expanded="false">
-          Wyszukaj...
-          <svg width="16" height="16" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7.79167 13.4583C10.9213 13.4583 13.4583 10.9213 13.4583 7.79167C13.4583 4.66205 10.9213 2.125 7.79167 2.125C4.66205 2.125 2.125 4.66205 2.125 7.79167C2.125 10.9213 4.66205 13.4583 7.79167 13.4583Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14.875 14.875L11.7938 11.7938" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Inline wyszukiwarka w navbarze -->
+      <div class="nav-search-wrap" id="nav-search-wrap">
+        <button class="nav-search-icon-btn" id="nav-search-open" aria-label="Wyszukaj">
+          <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+            <circle cx="7.5" cy="7.5" r="5" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 12L15 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </button>
+        <div class="nav-search-dropdown" id="nav-search-dropdown" style="display:none">
+          <form action="/search" method="GET" class="nav-search-form">
+            <input type="text" name="q" id="nav-search-input" placeholder="Szukaj filmów..." autocomplete="off" />
+            <button type="submit" class="nav-search-go">→</button>
+          </form>
+          <div id="nav-suggest-box" class="nav-suggest-box"></div>
+        </div>
       </div>
 
       <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
-      <div class="header__buttonwylogowanie">
-        <a href="/logout">Wyloguj</a>
-      </div>
+      <a href="/logout" class="nav-btn nav-btn-outline">Wyloguj</a>
       <% } else { %>
-      <div class="header__buttonlogowanie">
-        <a href="/admin">Logowanie</a>
-      </div>
+      <a href="/admin" class="nav-btn nav-btn-primary">Logowanie</a>
       <% } %>
     </div>
   </div>
 </nav>
+
+<script>
+(function() {
+  const openBtn = document.getElementById("nav-search-open");
+  const dropdown = document.getElementById("nav-search-dropdown");
+  const input = document.getElementById("nav-search-input");
+  const suggestBox = document.getElementById("nav-suggest-box");
+  let timer;
+
+  openBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.style.display !== "none";
+    dropdown.style.display = isOpen ? "none" : "block";
+    if (!isOpen) setTimeout(() => input.focus(), 50);
+  });
+
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    const val = input.value.trim();
+    if (val.length < 2) { suggestBox.innerHTML = ""; return; }
+    timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search-suggest?q=${encodeURIComponent(val)}`);
+        const data = await res.json();
+        suggestBox.innerHTML = data.map(m => `
+          <a class="nav-suggest-item" href="/movies/details?movieId=${m.id}">
+            ${m.poster ? `<img src="${m.poster}" alt="" />` : '<span class="nav-suggest-img-ph">🎬</span>'}
+            <div>
+              <div class="nav-suggest-title">${m.title}</div>
+              <div class="nav-suggest-meta">${m.year || ""}${m.vote ? ` · ⭐${m.vote}` : ""}</div>
+            </div>
+          </a>`).join("");
+      } catch {}
+    }, 250);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("#nav-search-wrap")) {
+      dropdown.style.display = "none";
+      suggestBox.innerHTML = "";
+    }
+  });
+})();
+</script>

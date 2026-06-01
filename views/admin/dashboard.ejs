@@ -67,6 +67,8 @@
 <!-- Zakładki -->
 <div class="dashboard-tabs">
   <button class="tab-btn active" data-tab="viz">📊 Dashboard</button>
+  <button class="tab-btn" data-tab="recommend">💡 Dla Ciebie</button>
+  <button class="tab-btn" data-tab="community">🌍 Społeczność</button>
   <button class="tab-btn" data-tab="rated">Oceny (<%= ratedMoviesCount %>)</button>
   <button class="tab-btn" data-tab="watched">Obejrzane (<%= watchedCount %>)</button>
   <button class="tab-btn" data-tab="watchlist">Do obejrzenia (<%= watchlistCount %>)</button>
@@ -131,6 +133,60 @@
     <div class="empty-state-icon">📊</div>
     <h3>Brak danych do wyświetlenia</h3>
     <p>Oznacz kilka filmów jako obejrzane i oceń je, aby zobaczyć swój dashboard.</p>
+  </div>
+</div>
+
+<!-- Rekomendacje -->
+<div class="tab-content" id="tab-recommend">
+  <div class="recommend-loading">Ładowanie rekomendacji...</div>
+  <div id="recommend-content" style="display:none">
+    <div class="viz-row">
+      <div class="recommend-section" style="flex:1">
+        <h3 class="section-subtitle">🎬 Polecane dla Ciebie</h3>
+        <p class="section-desc" id="recommend-desc"></p>
+        <div id="recommend-grid" class="recommend-grid"></div>
+      </div>
+      <div class="recommend-section similar-section">
+        <h3 class="section-subtitle">👥 Podobni kinomani</h3>
+        <p class="section-desc">Użytkownicy o zbliżonym guście filmowym</p>
+        <div id="similar-users-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Społeczność -->
+<div class="tab-content" id="tab-community">
+  <div class="community-loading">Ładowanie statystyk...</div>
+  <div id="community-content" style="display:none">
+    <div class="viz-kpi-row community-kpi-row">
+      <div class="viz-kpi">
+        <span class="viz-kpi-value" id="c-my-avg">—</span>
+        <span class="viz-kpi-label">Twoja śr. ocena</span>
+      </div>
+      <div class="viz-kpi">
+        <span class="viz-kpi-value" id="c-comm-avg">—</span>
+        <span class="viz-kpi-label">Śr. ocena społeczności</span>
+      </div>
+      <div class="viz-kpi">
+        <span class="viz-kpi-value" id="c-my-hours">—</span>
+        <span class="viz-kpi-label">Twoje godziny</span>
+      </div>
+      <div class="viz-kpi">
+        <span class="viz-kpi-value" id="c-avg-hours">—</span>
+        <span class="viz-kpi-label">Śr. godziny użytkownika</span>
+      </div>
+    </div>
+    <div class="viz-row">
+      <div class="viz-card">
+        <h4 class="viz-title">Rozkład ocen — społeczność</h4>
+        <div id="chart-community-dist"></div>
+      </div>
+      <div class="viz-card">
+        <h4 class="viz-title">Top gatunki społeczności</h4>
+        <div id="chart-community-genres"></div>
+      </div>
+    </div>
   </div>
 </div>
 
