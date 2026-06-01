@@ -249,13 +249,6 @@ const VIZ = {
       .transition().duration(600).delay((d, i) => i * 60)
       .attr("opacity", 1);
 
-    // Środkowy tekst
-    g.append("text").attr("text-anchor", "middle").attr("dy", "-0.2em")
-      .attr("font-size", 22).attr("font-weight", 700).attr("fill", "#1c1c2e")
-      .text(d3.sum(genreData, d => d.count));
-    g.append("text").attr("text-anchor", "middle").attr("dy", "1.2em")
-      .attr("font-size", 11).attr("fill", "#9ca3af").text("gatunków");
-
     // Legenda
     const legend = svg.append("g").attr("transform", `translate(${size + 12}, 20)`);
     genreData.forEach((d, i) => {

@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
         showDashToast("Konto zostało usunięte. Za chwilę zostaniesz przekierowany...", "success");
         setTimeout(() => { window.location.href = "/"; }, 2000);
       } else {
-        showDashToast("❌ Błąd przy usuwaniu konta.", "error");
+        showDashToast("Błąd przy usuwaniu konta.", "error");
       }
     });
   };

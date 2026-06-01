@@ -51,7 +51,7 @@
         <% if (r.posterPath) { %>
           <img src="https://image.tmdb.org/t/p/w200<%= r.posterPath %>" alt="<%= r.movieTitle %>" loading="lazy" />
         <% } else { %>
-          <div class="home-activity-no-poster">🎬</div>
+          <div class="home-activity-no-poster"></div>
         <% } %>
         <div class="home-activity-badges">
           <% if (r.rating) { %><span class="badge-rating">★ <%= r.rating %></span><% } %>
@@ -68,22 +68,30 @@
   <!-- Trending teraz -->
   <div class="home-section">
     <div class="home-section-header">
-      <h2>🔥 Popularne teraz</h2>
+      <h2>Popularne teraz</h2>
       <a href="/search?sort_by=popularity.desc" class="home-see-all">Więcej →</a>
     </div>
     <div class="home-movies-row">
       <% trending.forEach(m => { %>
-      <a href="/movies/details?movieId=<%= m.id %>" class="home-movie-card">
-        <% if (m.poster_path) { %>
-          <img src="https://image.tmdb.org/t/p/w300<%= m.poster_path %>" alt="<%= m.title %>" loading="lazy" />
-        <% } else { %>
-          <div class="home-no-poster">🎬</div>
-        <% } %>
-        <div class="home-movie-meta">
-          <% if (m.vote_average) { %><span class="home-vote">⭐ <%= m.vote_average.toFixed(1) %></span><% } %>
+      <div class="home-movie-card-wrap">
+        <a href="/movies/details?movieId=<%= m.id %>" class="home-movie-card">
+          <% if (m.poster_path) { %>
+            <img src="https://image.tmdb.org/t/p/w300<%= m.poster_path %>" alt="<%= m.title %>" loading="lazy" />
+          <% } else { %>
+            <div class="home-no-poster"></div>
+          <% } %>
+          <div class="home-movie-meta">
+            <% if (m.vote_average) { %><span class="home-vote"><%= m.vote_average.toFixed(1) %></span><% } %>
+          </div>
+          <span class="home-movie-title"><%= m.title %></span>
+        </a>
+        <div class="home-card-actions">
+          <button class="cqa-btn cqa-watched" data-movie-id="<%= m.id %>" data-status="watched">Obejrzane</button>
+          <button class="cqa-btn cqa-watchlist" data-movie-id="<%= m.id %>" data-status="watchlist">Do obejrzenia</button>
+          <button class="cqa-btn cqa-fav" data-movie-id="<%= m.id %>" data-status="favourite">Ulubione</button>
+          <button class="cqa-btn cqa-rate" data-movie-id="<%= m.id %>" data-movie-title="<%= m.title.replace(/"/g,'&quot;') %>">Oceń</button>
         </div>
-        <span class="home-movie-title"><%= m.title %></span>
-      </a>
+      </div>
       <% }) %>
     </div>
   </div>
@@ -91,7 +99,7 @@
   <!-- Top oceniane -->
   <div class="home-section">
     <div class="home-section-header">
-      <h2>🏆 Najwyżej oceniane wszech czasów</h2>
+      <h2>Najwyżej oceniane wszech czasów</h2>
       <a href="/search?sort_by=vote_average.desc&vote_min=8" class="home-see-all">Więcej →</a>
     </div>
     <div class="home-top-grid">
