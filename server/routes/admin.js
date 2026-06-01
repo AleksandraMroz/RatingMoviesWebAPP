@@ -420,18 +420,38 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
       Review.find({ userId }),
     ]);
 
+    const watchedReviews = reviews.filter(r => r.watchStatus === "watched");
+
+    // Jeśli WatchHistory jest puste, buduj dane z Review (fallback)
+    const historySource = watchHistory.length > 0 ? watchHistory : watchedReviews.map(r => ({
+      runtime: r.runtime || 0,
+      watchedAt: r.watchedDate || r.updatedAt || r.createdAt,
+      genres: [],
+      movieId: r.movieId,
+    }));
+
     // 1. Łączny czas
-    const totalMinutes = watchHistory.reduce((sum, w) => sum + (w.runtime || 0), 0);
+    const totalMinutes = historySource.reduce((sum, w) => sum + (w.runtime || 0), 0);
 
     // 2. Aktywność dzień po dniu (ostatnie 365 dni)
     const activityMap = {};
-    watchHistory.forEach(w => {
+
+    // Aktywność z WatchHistory / obejrzanych
+    historySource.forEach(w => {
       const day = new Date(w.watchedAt).toISOString().slice(0, 10);
       activityMap[day] = (activityMap[day] || 0) + 1;
     });
-    const activityData = Object.entries(activityMap).map(([date, count]) => ({ date, count }));
+    // Uzupełnij ocenami (jeśli dany dzień nie istnieje jeszcze)
+    reviews.filter(r => r.rating != null).forEach(r => {
+      const day = new Date(r.updatedAt || r.createdAt).toISOString().slice(0, 10);
+      if (!activityMap[day]) activityMap[day] = 0;
+      activityMap[day] += 0.5; // ocena liczy jako połowa aktywności
+    });
+    const activityData = Object.entries(activityMap)
+      .map(([date, count]) => ({ date, count: Math.ceil(count) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
-    // 3. Rozkład gatunków
+    // 3. Rozkład gatunków — z WatchHistory lub z pominięciem jeśli puste
     const genreMap = {};
     watchHistory.forEach(w => {
       (w.genres || []).forEach(g => {
@@ -446,7 +466,7 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
     // 4. Średnia ocena miesięcznie
     const ratingsByMonth = {};
     reviews.filter(r => r.rating != null).forEach(r => {
-      const month = new Date(r.createdAt).toISOString().slice(0, 7);
+      const month = new Date(r.updatedAt || r.createdAt).toISOString().slice(0, 7);
       if (!ratingsByMonth[month]) ratingsByMonth[month] = { sum: 0, count: 0 };
       ratingsByMonth[month].sum += r.rating;
       ratingsByMonth[month].count += 1;
@@ -455,9 +475,9 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
       .map(([month, { sum, count }]) => ({ month, avg: +(sum / count).toFixed(2), count }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
-    // 5. Czas oglądania miesięcznie
+    // 5. Czas oglądania miesięcznie (z historySource)
     const minutesByMonth = {};
-    watchHistory.forEach(w => {
+    historySource.forEach(w => {
       const month = new Date(w.watchedAt).toISOString().slice(0, 7);
       minutesByMonth[month] = (minutesByMonth[month] || 0) + (w.runtime || 0);
     });
@@ -465,7 +485,7 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
       .map(([month, minutes]) => ({ month, hours: +(minutes / 60).toFixed(1) }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
-    // 6. Rozkład ocen (ile filmów z oceną 1,2,3,4,5)
+    // 6. Rozkład ocen
     const ratingDist = [1, 2, 3, 4, 5].map(star => ({
       star,
       count: reviews.filter(r => r.rating === star).length,
@@ -476,11 +496,15 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
       .filter(r => r.watchStatus === "watchlist")
       .reduce((sum, r) => sum + (r.runtime || 90), 0);
 
+    const ratedCount = reviews.filter(r => r.rating != null).length;
+    // Liczba obejrzanych = większa z obu źródeł
+    const watchedCount = Math.max(watchHistory.length, watchedReviews.length);
+
     res.json({
       totalMinutes,
       totalHours: Math.floor(totalMinutes / 60),
-      watchedCount: watchHistory.length,
-      ratedCount: reviews.filter(r => r.rating != null).length,
+      watchedCount,
+      ratedCount,
       watchlistMinutes: watchlistRuntime,
       activityData,
       genreData,
