@@ -53,7 +53,11 @@
     <hr style="margin:16px 0;border-color:var(--gray-light)"/>
     <div class="list-quick-create">
       <h4>Utwórz nową listę</h4>
-      <input type="text" id="detail-quick-list-name" placeholder="Nazwa listy" maxlength="80" />
+      <input type="text" id="detail-quick-list-name" placeholder="Nazwa listy" maxlength="80" style="width:100%;margin-bottom:8px" />
+      <textarea id="detail-quick-list-desc" placeholder="Opis (opcjonalnie)" rows="2" style="width:100%;margin-bottom:8px;padding:8px;border-radius:8px;border:1px solid var(--gray-light);font-family:inherit;font-size:0.9rem;resize:vertical"></textarea>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;margin-bottom:12px;cursor:pointer">
+        <input type="checkbox" id="detail-quick-list-public" checked /> Lista publiczna (widoczna na profilu)
+      </label>
       <button class="btn" id="detail-quick-create-list-btn">Utwórz i dodaj</button>
     </div>
   </div>
@@ -119,6 +123,25 @@
   // Dodaj do listy
   const listModal = document.getElementById("detail-list-modal");
   const listBody = document.getElementById("detail-list-modal-body");
+  const movieTitle = "<%= movie.title.replace(/"/g, '&quot;').replace(/\\/g, '\\\\') %>";
+  const posterPath = "<%= movie.poster_path %>";
+
+  function showToast(msg) {
+    const t = document.createElement("div"); t.className = "toast toast-success"; t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.classList.add("toast-show"), 10);
+    setTimeout(() => { t.classList.remove("toast-show"); setTimeout(() => t.remove(), 400); }, 2500);
+  }
+
+  async function addToList(listId) {
+    const r = await fetch(`/lists/${listId}/add`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ movieId, movieTitle, posterPath }),
+      credentials: "same-origin"
+    });
+    listModal.style.display = "none";
+    showToast(r.ok ? "Dodano do listy" : "Błąd dodawania do listy");
+  }
+
   document.getElementById("detail-add-list-btn").onclick = async function() {
     listBody.innerHTML = "Ładowanie list...";
     listModal.style.display = "block";
@@ -129,19 +152,7 @@
       ? lists.map(l => `<button class="btn btn-ghost detail-add-to-list-item" style="width:100%;margin-bottom:6px;text-align:left" data-list="${l._id}">${l.name} (${l.movies.length} filmów)</button>`).join("")
       : "<p>Nie masz jeszcze żadnych list.</p>";
     listBody.querySelectorAll(".detail-add-to-list-item").forEach(btn => {
-      btn.onclick = async () => {
-        await fetch(`/lists/${btn.dataset.list}/movies`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ movieId, movieTitle: "<%= movie.title.replace(/"/g, '\\\"') %>", posterPath: "<%= movie.poster_path %>" }),
-          credentials: "same-origin"
-        });
-        listModal.style.display = "none";
-        const t = document.createElement("div");
-        t.className = "toast toast-success"; t.textContent = "Dodano do listy";
-        document.body.appendChild(t);
-        setTimeout(() => t.classList.add("toast-show"), 10);
-        setTimeout(() => { t.classList.remove("toast-show"); setTimeout(() => t.remove(), 400); }, 2500);
-      };
+      btn.onclick = () => addToList(btn.dataset.list);
     });
   };
   document.getElementById("close-detail-list-modal").onclick = () => { listModal.style.display = "none"; };
@@ -150,17 +161,16 @@
   document.getElementById("detail-quick-create-list-btn").onclick = async () => {
     const name = document.getElementById("detail-quick-list-name").value.trim();
     if (!name) return;
-    const res = await fetch("/lists", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, isPublic: false }), credentials: "same-origin" });
-    const newList = await res.json();
-    await fetch(`/lists/${newList._id}/movies`, {
+    const desc = document.getElementById("detail-quick-list-desc").value.trim();
+    const isPublic = document.getElementById("detail-quick-list-public").checked;
+    const res = await fetch("/lists", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ movieId, movieTitle: "<%= movie.title.replace(/"/g, '\\\"') %>", posterPath: "<%= movie.poster_path %>" }),
+      body: JSON.stringify({ name, description: desc, isPublic }),
       credentials: "same-origin"
     });
-    listModal.style.display = "none";
-    const t = document.createElement("div"); t.className = "toast toast-success"; t.textContent = "Lista utworzona i film dodany";
-    document.body.appendChild(t); setTimeout(() => t.classList.add("toast-show"), 10);
-    setTimeout(() => { t.classList.remove("toast-show"); setTimeout(() => t.remove(), 400); }, 2500);
+    const newList = await res.json();
+    await addToList(newList._id);
+    showToast("Lista utworzona i film dodany");
   };
 })();
 </script>
