@@ -1,9 +1,207 @@
-<section class="movies">
-  <h2 class="movies__heading">Najpopularniejsze w ostatnim czasie</h2>
-  <div id="section"></div>
-</section>
+<% if (userData) { %>
+<!-- ============================================================ -->
+<!-- WIDOK ZALOGOWANEGO -->
+<!-- ============================================================ -->
+<div class="home-logged">
 
-<script>
-  window.isLoggedIn = "<%= isLoggedIn ? 'true' : 'false' %>";
-</script>
-<script src="/js/movies.js"></script>
+  <!-- Powitanie + szybkie statsy -->
+  <div class="home-greeting">
+    <div class="home-greeting-left">
+      <% if (userData.avatarUrl) { %>
+        <img src="<%= userData.avatarUrl %>" alt="<%= userData.username %>" class="home-avatar" />
+      <% } else { %>
+        <div class="avatar-placeholder home-avatar"><%= userData.username[0].toUpperCase() %></div>
+      <% } %>
+      <div>
+        <h1 class="home-greeting-title">Cześć, <strong><%= userData.username %></strong>! 👋</h1>
+        <p class="home-greeting-sub">Co dziś oglądasz?</p>
+      </div>
+    </div>
+    <div class="home-quick-stats">
+      <div class="home-stat">
+        <span class="home-stat-val"><%= userData.ratedCount %></span>
+        <span class="home-stat-label">ocen</span>
+      </div>
+      <div class="home-stat">
+        <span class="home-stat-val"><%= userData.watchedCount %></span>
+        <span class="home-stat-label">obejrzanych</span>
+      </div>
+      <div class="home-stat">
+        <span class="home-stat-val"><%= userData.followsCount %></span>
+        <span class="home-stat-label">obserwowanych</span>
+      </div>
+    </div>
+    <div class="home-quick-actions">
+      <a href="/search" class="btn">🔍 Szukaj filmów</a>
+      <a href="/feed" class="btn btn-ghost">📡 Aktywność</a>
+      <a href="/dashboard" class="btn btn-ghost">📊 Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Ostatnia aktywność -->
+  <% if (userData.recentActivity && userData.recentActivity.length > 0) { %>
+  <div class="home-section">
+    <div class="home-section-header">
+      <h2>Ostatnio przez Ciebie</h2>
+      <a href="/dashboard" class="home-see-all">Zobacz wszystkie →</a>
+    </div>
+    <div class="home-activity-row">
+      <% userData.recentActivity.forEach(r => { %>
+      <a href="/movies/details?movieId=<%= r.movieId %>" class="home-activity-card">
+        <% if (r.posterPath) { %>
+          <img src="https://image.tmdb.org/t/p/w200<%= r.posterPath %>" alt="<%= r.movieTitle %>" loading="lazy" />
+        <% } else { %>
+          <div class="home-activity-no-poster">🎬</div>
+        <% } %>
+        <div class="home-activity-badges">
+          <% if (r.rating) { %><span class="badge-rating">★ <%= r.rating %></span><% } %>
+          <% if (r.watchStatus === 'watched') { %><span class="badge-watched">✓</span><% } %>
+          <% if (r.isFavourite) { %><span class="badge-fav">♥</span><% } %>
+        </div>
+        <span class="home-activity-title"><%= r.movieTitle %></span>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Trending teraz -->
+  <div class="home-section">
+    <div class="home-section-header">
+      <h2>🔥 Popularne teraz</h2>
+      <a href="/search?sort_by=popularity.desc" class="home-see-all">Więcej →</a>
+    </div>
+    <div class="home-movies-row">
+      <% trending.forEach(m => { %>
+      <a href="/movies/details?movieId=<%= m.id %>" class="home-movie-card">
+        <% if (m.poster_path) { %>
+          <img src="https://image.tmdb.org/t/p/w300<%= m.poster_path %>" alt="<%= m.title %>" loading="lazy" />
+        <% } else { %>
+          <div class="home-no-poster">🎬</div>
+        <% } %>
+        <div class="home-movie-meta">
+          <% if (m.vote_average) { %><span class="home-vote">⭐ <%= m.vote_average.toFixed(1) %></span><% } %>
+        </div>
+        <span class="home-movie-title"><%= m.title %></span>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Top oceniane -->
+  <div class="home-section">
+    <div class="home-section-header">
+      <h2>🏆 Najwyżej oceniane wszech czasów</h2>
+      <a href="/search?sort_by=vote_average.desc&vote_min=8" class="home-see-all">Więcej →</a>
+    </div>
+    <div class="home-top-grid">
+      <% topRated.forEach((m, i) => { %>
+      <a href="/movies/details?movieId=<%= m.id %>" class="home-top-card">
+        <span class="home-top-rank">#<%= i + 1 %></span>
+        <% if (m.poster_path) { %>
+          <img src="https://image.tmdb.org/t/p/w92<%= m.poster_path %>" alt="<%= m.title %>" loading="lazy" />
+        <% } %>
+        <div class="home-top-info">
+          <span class="home-top-title"><%= m.title %></span>
+          <span class="home-top-meta"><% if (m.release_date) { %><%= m.release_date.slice(0,4) %> · <% } %>⭐ <%= m.vote_average.toFixed(1) %></span>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Gatunki -->
+  <div class="home-section">
+    <h2>🎭 Przeglądaj gatunki</h2>
+    <div class="home-genres-row">
+      <% [{id:28,name:'Akcja',emoji:'💥'},{id:27,name:'Horror',emoji:'👻'},{id:35,name:'Komedia',emoji:'😂'},{id:18,name:'Dramat',emoji:'🎭'},{id:878,name:'Sci-Fi',emoji:'🚀'},{id:10749,name:'Romans',emoji:'❤️'},{id:53,name:'Thriller',emoji:'🔪'},{id:16,name:'Animacja',emoji:'✨'}].forEach(g => { %>
+      <a href="/search?genre=<%= g.id %>&sort_by=popularity.desc" class="home-genre-chip">
+        <span><%= g.emoji %></span><span><%= g.name %></span>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+
+</div>
+
+<% } else { %>
+<!-- ============================================================ -->
+<!-- LANDING PAGE DLA GOŚCI -->
+<!-- ============================================================ -->
+<div class="landing">
+
+  <!-- Hero -->
+  <div class="landing-hero">
+    <div class="landing-hero-text">
+      <h1 class="landing-headline">Twój osobisty<br/><span class="landing-accent">dziennik kinomana</span></h1>
+      <p class="landing-sub">Oceniaj filmy, buduj kolekcje, śledź co oglądają znajomi.<br/>Wszystko w jednym miejscu.</p>
+      <div class="landing-cta">
+        <a href="/register" class="btn landing-btn-primary">Zacznij za darmo</a>
+        <a href="/search" class="btn btn-ghost landing-btn-ghost">🔍 Przeglądaj filmy</a>
+      </div>
+    </div>
+    <div class="landing-hero-posters">
+      <% trending.slice(0,5).forEach((m, i) => { %>
+        <% if (m.poster_path) { %>
+        <img
+          src="https://image.tmdb.org/t/p/w300<%= m.poster_path %>"
+          alt="<%= m.title %>"
+          class="landing-poster landing-poster-<%= i %>"
+          loading="lazy"
+        />
+        <% } %>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="landing-features">
+    <% [
+      {icon:'⭐',title:'Oceniaj i recenzuj',desc:'Gwiazdkowa skala ocen i miejsce na komentarz przy każdym filmie'},
+      {icon:'📋',title:'Własne listy',desc:'Twórz tematyczne listy i dziel się nimi ze znajomymi'},
+      {icon:'📊',title:'Dashboard z wykresami',desc:'Twoje statystyki — gatunki, czas oglądania, aktywność'},
+      {icon:'👥',title:'Społeczność',desc:'Obserwuj znajomych i śledź ich filmową aktywność'},
+      {icon:'💡',title:'Rekomendacje',desc:'Propozycje dopasowane do Twoich ulubionych gatunków'},
+      {icon:'🏆',title:'Osiągnięcia',desc:'Zbieraj odznaki za swoje filmowe milestone'},
+    ].forEach(f => { %>
+    <div class="landing-feature">
+      <span class="feature-icon"><%= f.icon %></span>
+      <h3><%= f.title %></h3>
+      <p><%= f.desc %></p>
+    </div>
+    <% }) %>
+  </div>
+
+  <!-- Popularne filmy -->
+  <div class="home-section" style="margin-top:48px">
+    <div class="home-section-header">
+      <h2>🔥 Popularne teraz</h2>
+      <a href="/search" class="home-see-all">Zobacz więcej →</a>
+    </div>
+    <div class="home-movies-row">
+      <% trending.slice(0, 8).forEach(m => { %>
+      <a href="/movies/details?movieId=<%= m.id %>" class="home-movie-card">
+        <% if (m.poster_path) { %>
+          <img src="https://image.tmdb.org/t/p/w300<%= m.poster_path %>" alt="<%= m.title %>" loading="lazy" />
+        <% } else { %>
+          <div class="home-no-poster">🎬</div>
+        <% } %>
+        <div class="home-movie-meta">
+          <% if (m.vote_average) { %><span class="home-vote">⭐ <%= m.vote_average.toFixed(1) %></span><% } %>
+        </div>
+        <span class="home-movie-title"><%= m.title %></span>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- CTA dolny -->
+  <div class="landing-bottom-cta">
+    <h2>Gotowy na swój kinowy dziennik?</h2>
+    <p>Dołącz i zacznij śledzić swoje filmowe podróże.</p>
+    <a href="/register" class="btn landing-btn-primary">Załóż konto</a>
+    <a href="/admin" class="btn btn-ghost" style="margin-left:12px">Zaloguj się</a>
+  </div>
+
+</div>
+<% } %>

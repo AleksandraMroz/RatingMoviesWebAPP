@@ -1,9 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
+const jwt = require("jsonwebtoken");
 const API_KEY = "987aea1677d0b14e760954964e938196";
 const Review = require("../models/Review");
 const User = require("../models/User");
+const WatchHistory = require("../models/WatchHistory");
+const Follow = require("../models/Follow");
+const jwtSecret = process.env.JWT_SECRET;
 
 const TMDB_GENRES = [
   { id: 28, name: "Akcja" },
@@ -28,9 +32,59 @@ const TMDB_GENRES = [
 
 router.get("/", async (req, res) => {
   try {
-    res.render("index", { isLoggedIn: req.session.isLoggedIn, currentRoute: "/" });
+    // Pobierz popularne filmy zawsze
+    const [trendingRes, topRatedRes] = await Promise.all([
+      axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=pl-PL&page=1`),
+      axios.get(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=pl-PL&page=1`),
+    ]);
+    const trending = (trendingRes.data.results || []).slice(0, 10);
+    const topRated = (topRatedRes.data.results || []).slice(0, 6);
+
+    // Jeśli zalogowany — pobierz dane spersonalizowane
+    let userData = null;
+    const token = req.cookies.token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, jwtSecret);
+        const userId = decoded.userId;
+        const user = await User.findById(userId).select("username avatarUrl");
+
+        const [reviews, watchHistory, followsCount] = await Promise.all([
+          Review.find({ userId }, "movieId movieTitle posterPath rating watchStatus isFavourite").sort({ updatedAt: -1 }).limit(6),
+          WatchHistory.find({ userId }).sort({ watchedAt: -1 }).limit(1),
+          Follow.countDocuments({ followerId: userId }),
+        ]);
+
+        const ratedCount = reviews.filter(r => r.rating != null).length;
+        const watchedCount = reviews.filter(r => r.watchStatus === "watched").length;
+        const recentActivity = reviews.slice(0, 5);
+
+        // Ostatnio oglądany film
+        const lastWatched = watchHistory[0] || null;
+
+        userData = {
+          username: user.username,
+          avatarUrl: user.avatarUrl,
+          ratedCount,
+          watchedCount,
+          followsCount,
+          recentActivity,
+          lastWatched,
+        };
+      } catch {}
+    }
+
+    res.render("index", {
+      isLoggedIn: req.session.isLoggedIn,
+      currentRoute: "/",
+      trending,
+      topRated,
+      userData,
+      genres: TMDB_GENRES,
+    });
   } catch (error) {
-    res.render("index", { isLoggedIn: req.session.isLoggedIn, currentRoute: "/" });
+    console.error(error);
+    res.render("index", { isLoggedIn: req.session.isLoggedIn, currentRoute: "/", trending: [], topRated: [], userData: null, genres: TMDB_GENRES });
   }
 });
 
