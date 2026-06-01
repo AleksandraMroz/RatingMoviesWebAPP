@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
@@ -14,6 +15,7 @@ const Review = require("../models/Review");
 const WatchHistory = require("../models/WatchHistory");
 const Follow = require("../models/Follow");
 const List = require("../models/List");
+const { computeAchievements } = require("../achievements");
 
 // Multer — upload avatarów
 const avatarStorage = multer.diskStorage({
@@ -259,6 +261,33 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
     const favourites = reviews.filter(r => r.watchStatus === "favourite");
     const rated = reviews.filter(r => r.rating != null);
 
+    const [totalWatchHistory, followingCount, followersCount, lists] = await Promise.all([
+      WatchHistory.aggregate([{ $match: { userId: mongoose.Types.ObjectId(userId) } }, { $group: { _id: null, total: { $sum: "$runtime" } } }]),
+      Follow.countDocuments({ followerId: userId }),
+      Follow.countDocuments({ followingId: userId }),
+      List.countDocuments({ userId }),
+    ]);
+
+    const watchHistoryGenres = await WatchHistory.find({ userId }, "genres");
+    const genreSet = new Set();
+    watchHistoryGenres.forEach(w => (w.genres || []).forEach(g => genreSet.add(g.id)));
+
+    const achievementStats = {
+      ratedCount: rated.length,
+      watchedCount: watched.length,
+      watchlistCount: watchlist.length,
+      favouritesCount: favourites.length,
+      totalMinutes: totalWatchHistory[0]?.total || 0,
+      followingCount,
+      followersCount,
+      listsCount: lists,
+      hasFiveStar: rated.some(r => r.rating === 5),
+      commentsCount: rated.filter(r => r.comment && r.comment.trim()).length,
+      genresCount: genreSet.size,
+    };
+
+    const achievements = computeAchievements(achievementStats);
+
     res.render("admin/dashboard", {
       username: user.username,
       avatarUrl: user.avatarUrl,
@@ -270,6 +299,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
       watched,
       watchlist,
       favourites,
+      achievements,
       currentRoute: "/dashboard",
       passwordReset: req.query.passwordReset,
       error: req.query.error,
@@ -667,11 +697,32 @@ router.get("/profile/:username", async (req, res) => {
     const favourites = reviews.filter(r => r.watchStatus === "favourite");
     const rated = reviews.filter(r => r.rating != null);
 
-    const [followersCount, followingCount, publicLists] = await Promise.all([
+    const [followersCount, followingCount, publicLists, profileWatchHistory, profileLists] = await Promise.all([
       Follow.countDocuments({ followingId: user._id }),
       Follow.countDocuments({ followerId: user._id }),
       List.find({ userId: user._id, isPublic: true }).sort({ createdAt: -1 }),
+      WatchHistory.aggregate([{ $match: { userId: mongoose.Types.ObjectId(user._id) } }, { $group: { _id: null, total: { $sum: "$runtime" } } }]),
+      List.countDocuments({ userId: user._id }),
     ]);
+
+    const profileGenreData = await WatchHistory.find({ userId: user._id }, "genres");
+    const profileGenreSet = new Set();
+    profileGenreData.forEach(w => (w.genres || []).forEach(g => profileGenreSet.add(g.id)));
+
+    const achievementStats = {
+      ratedCount: rated.length,
+      watchedCount: watched.length,
+      watchlistCount: watchlist.length,
+      favouritesCount: favourites.length,
+      totalMinutes: profileWatchHistory[0]?.total || 0,
+      followingCount,
+      followersCount,
+      listsCount: profileLists,
+      hasFiveStar: rated.some(r => r.rating === 5),
+      commentsCount: rated.filter(r => r.comment && r.comment.trim()).length,
+      genresCount: profileGenreSet.size,
+    };
+    const achievements = computeAchievements(achievementStats);
 
     // Sprawdź czy zalogowany użytkownik obserwuje ten profil
     let isFollowing = false;
@@ -701,6 +752,7 @@ router.get("/profile/:username", async (req, res) => {
       watchlist,
       favourites,
       publicLists,
+      achievements,
       isFollowing,
       currentUserId,
       currentRoute: "/profile",
