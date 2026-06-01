@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
         svg.append("line")
           .attr("x1", 0).attr("x2", w)
           .attr("y1", y(0)).attr("y2", y(0))
-          .attr("stroke", "#f59e0b").attr("stroke-width", 2).attr("stroke-dasharray", "6,3");
+          .attr("stroke", "#7c3aed").attr("stroke-width", 2).attr("stroke-dasharray", "6,3");
       }
     }
 

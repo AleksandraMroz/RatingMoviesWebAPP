@@ -588,15 +588,22 @@ router.get("/following", authMiddleware, async (req, res) => {
 /**
  * GET /discover - Odkryj użytkowników (ranking aktywności)
  */
-router.get("/discover", authMiddleware, async (req, res) => {
+router.get("/discover", async (req, res) => {
   try {
-    const userId = req.userId;
+    let userId = null;
+    try {
+      const token = req.cookies.token;
+      if (token) {
+        const decoded = require("jsonwebtoken").verify(token, process.env.JWT_SECRET);
+        userId = decoded.userId;
+      }
+    } catch (_) {}
 
-    // Wszyscy użytkownicy poza zalogowanym
-    const allUsers = await User.find({ _id: { $ne: userId } });
+    const allUsers = userId
+      ? await User.find({ _id: { $ne: userId } })
+      : await User.find({});
 
-    // Pobierz follows zalogowanego (żeby wiedzieć kogo już obserwuje)
-    const myFollows = await Follow.find({ followerId: userId });
+    const myFollows = userId ? await Follow.find({ followerId: userId }) : [];
     const followingIds = new Set(myFollows.map(f => f.followingId.toString()));
 
     const usersWithStats = await Promise.all(allUsers.map(async (user) => {
@@ -638,7 +645,7 @@ router.get("/discover", authMiddleware, async (req, res) => {
     res.render("discover", {
       users: usersWithStats,
       currentRoute: "/discover",
-      isLoggedIn: true,
+      isLoggedIn: !!userId,
     });
   } catch (error) {
     console.error("Error fetching discover:", error);

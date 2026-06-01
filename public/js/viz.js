@@ -59,7 +59,7 @@ const VIZ = {
 
   async load() {
     if (this.loaded && this.data) {
-      this.render(this.data);
+      requestAnimationFrame(() => this.render(this.data));
       return;
     }
 
