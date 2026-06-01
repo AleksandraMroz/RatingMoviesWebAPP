@@ -3,6 +3,20 @@
   <p class="page-subtitle">Aktywność osób, które obserwujesz</p>
 </div>
 
+<%
+function timeSince(date) {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  if (seconds < 60) return "przed chwilą";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return minutes + " min temu";
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + "h temu";
+  const days = Math.floor(hours / 24);
+  if (days < 30) return days + " dni temu";
+  return new Date(date).toLocaleDateString('pl-PL');
+}
+%>
+
 <% if (users.length === 0) { %>
 <div class="empty-state">
   <div class="empty-state-icon">👥</div>
@@ -76,23 +90,6 @@
 <% } %>
 
 <script>
-function timeSince(date) {
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-  if (seconds < 60) return "przed chwilą";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min temu`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h temu`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} dni temu`;
-  return new Date(date).toLocaleDateString('pl-PL');
-}
-
-// Zaktualizuj czasy "aktywny/a X temu"
-document.querySelectorAll('.last-active[data-date]').forEach(el => {
-  el.textContent = 'aktywny/a ' + timeSince(el.dataset.date);
-});
-
 // Unfollow
 document.querySelectorAll('.unfollow-btn').forEach(btn => {
   btn.addEventListener('click', () => {
