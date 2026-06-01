@@ -64,18 +64,24 @@ const VIZ = {
     }
 
     const loading = document.getElementById("viz-loading");
-    const empty = document.getElementById("viz-empty");
     if (loading) loading.style.display = "block";
 
     try {
-      const res = await fetch("/api/dashboard-stats");
+      const res = await fetch("/api/dashboard-stats", { credentials: "same-origin" });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("dashboard-stats error:", res.status, errText);
+        if (loading) loading.textContent = "Błąd ładowania (" + res.status + ").";
+        return;
+      }
       this.data = await res.json();
+      console.log("dashboard-stats:", this.data); // DEBUG
       this.loaded = true;
       if (loading) loading.style.display = "none";
       this.render(this.data);
     } catch (err) {
       if (loading) loading.textContent = "Błąd ładowania danych.";
-      console.error(err);
+      console.error("viz load error:", err);
     }
   },
 
