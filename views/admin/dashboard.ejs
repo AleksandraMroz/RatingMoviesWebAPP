@@ -62,26 +62,32 @@
 
 <!-- Osiągnięcia -->
 <% if (locals.achievements && achievements.length) { %>
-<div class="achievements-row">
-  <% achievements.forEach(a => { %>
-  <div class="achievement-chip <%= a.unlocked ? 'unlocked' : 'locked' %>" title="<%= a.desc %>">
-    <span class="achievement-icon"><%= a.icon %></span>
-    <span class="achievement-name"><%= a.name %></span>
+<div class="achievements-bar">
+  <div class="achievements-bar-header" id="ach-toggle" onclick="document.getElementById('ach-chips').classList.toggle('ach-open')">
+    <span>Osiągnięcia (<%= achievements.filter(a=>a.unlocked).length %>/<%= achievements.length %>)</span>
+    <span class="ach-arrow">›</span>
   </div>
-  <% }) %>
+  <div class="achievements-chips-scroll" id="ach-chips">
+    <% [...achievements].sort((a,b) => b.unlocked - a.unlocked).forEach(a => { %>
+    <div class="achievement-chip <%= a.unlocked ? 'unlocked' : 'locked' %>" title="<%= a.desc %>">
+      <span class="achievement-icon"><%= a.icon %></span>
+      <span class="achievement-name"><%= a.name %></span>
+    </div>
+    <% }) %>
+  </div>
 </div>
 <% } %>
 
 <!-- Zakładki -->
 <div class="dashboard-tabs">
-  <button class="tab-btn active" data-tab="viz">📊 Dashboard</button>
-  <button class="tab-btn" data-tab="recommend">💡 Dla Ciebie</button>
-  <button class="tab-btn" data-tab="community">🌍 Społeczność</button>
+  <button class="tab-btn active" data-tab="viz">Dashboard</button>
+  <button class="tab-btn" data-tab="recommend">Dla Ciebie</button>
+  <button class="tab-btn" data-tab="community">Społeczność</button>
   <button class="tab-btn" data-tab="rated">Oceny (<%= ratedMoviesCount %>)</button>
   <button class="tab-btn" data-tab="watched">Obejrzane (<%= watchedCount %>)</button>
   <button class="tab-btn" data-tab="watchlist">Do obejrzenia (<%= watchlistCount %>)</button>
   <button class="tab-btn" data-tab="favourites">Ulubione (<%= favouritesCount %>)</button>
-  <button class="tab-btn" data-tab="lists">📋 Moje listy</button>
+  <button class="tab-btn" data-tab="lists">Moje listy</button>
 </div>
 
 <!-- Dashboard D3.js -->
@@ -96,7 +102,7 @@
     </div>
     <div class="viz-kpi">
       <span class="viz-kpi-value" id="kpi-watched">—</span>
-      <span class="viz-kpi-label">filmów obejrzanych</span>
+      <span class="viz-kpi-label">obejrzanych filmów</span>
     </div>
     <div class="viz-kpi">
       <span class="viz-kpi-value" id="kpi-rated">—</span>

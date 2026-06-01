@@ -1141,6 +1141,12 @@ img {
   margin-bottom: 28px;
 }
 
+.achievements-bar { background: var(--bg-secondary); border: 1px solid var(--gray-light); border-radius: var(--border-radius); margin-bottom: 16px; overflow: hidden; }
+.achievements-bar-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--gray); }
+.ach-arrow { transition: transform 0.2s; font-size: 1.2rem; }
+.achievements-chips-scroll { display: none; flex-wrap: nowrap; gap: 8px; padding: 0 16px 12px; overflow-x: auto; }
+.achievements-chips-scroll.ach-open { display: flex; }
+
 .achievement-chip {
   display: flex;
   align-items: center;
@@ -1429,14 +1435,14 @@ img {
 .following-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .following-card {
   background: var(--bg-secondary);
   border: 1px solid var(--gray-light);
   border-radius: var(--border-radius);
-  padding: 20px 24px;
+  padding: 12px 16px;
   transition: box-shadow 0.2s;
 }
 

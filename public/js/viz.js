@@ -239,7 +239,7 @@ const VIZ = {
         const total = d3.sum(genreData, g => g.count);
         const pct = Math.round(d.data.count / total * 100);
         VIZ.showTooltip(event,
-          `<strong>${d.data.name}</strong><br>${d.data.count} filmów · ${pct}%`);
+          `<strong>${d.data.name}</strong><br>${d.data.count} razy · ${pct}%`);
       })
       .on("mousemove", event => this.moveTooltip(event))
       .on("mouseout", function() {
@@ -254,7 +254,7 @@ const VIZ = {
       .attr("font-size", 22).attr("font-weight", 700).attr("fill", "#1c1c2e")
       .text(d3.sum(genreData, d => d.count));
     g.append("text").attr("text-anchor", "middle").attr("dy", "1.2em")
-      .attr("font-size", 11).attr("fill", "#9ca3af").text("filmów");
+      .attr("font-size", 11).attr("fill", "#9ca3af").text("gatunków");
 
     // Legenda
     const legend = svg.append("g").attr("transform", `translate(${size + 12}, 20)`);

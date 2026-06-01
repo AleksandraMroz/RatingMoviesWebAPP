@@ -45,7 +45,7 @@ function timeSince(date) {
           aktywny/a <%= timeSince(user.lastActiveAt) %>
         </span>
         <% } %>
-        <span class="followers-count">👥 <%= user.followersCount %> obserwujących</span>
+        <span class="followers-count"><%= user.followersCount %> obserwujących</span>
       </div>
       <button class="unfollow-btn" data-user-id="<%= user._id %>">Unfollow</button>
     </div>
@@ -66,24 +66,6 @@ function timeSince(date) {
       </div>
     </div>
 
-    <!-- Ostatnie 3 ocenione filmy -->
-    <% if (user.recentRatings.length > 0) { %>
-    <div class="following-recent">
-      <p class="following-recent-label">Ostatnio ocenione:</p>
-      <div class="following-posters">
-        <% user.recentRatings.forEach(r => { %>
-        <a href="/movies/details?movieId=<%= r.movieId %>" class="following-poster-wrap" title="<%= r.movieTitle %>">
-          <% if (r.posterPath) { %>
-            <img src="https://image.tmdb.org/t/p/w92<%= r.posterPath %>" alt="<%= r.movieTitle %>" />
-          <% } else { %>
-            <div class="poster-placeholder"><%= r.movieTitle ? r.movieTitle[0] : '?' %></div>
-          <% } %>
-          <span class="poster-rating"><%- '★'.repeat(r.rating) %></span>
-        </a>
-        <% }) %>
-      </div>
-    </div>
-    <% } %>
   </div>
   <% }) %>
 </div>
