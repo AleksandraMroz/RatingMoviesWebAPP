@@ -36,15 +36,18 @@ const avatarUpload = multer({
 
 const authMiddleware = (req, res, next) => {
   const token = req.cookies.token;
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  if (!token) {
+    const isApi = req.path.startsWith("/api/") || req.headers.accept?.includes("application/json");
+    return isApi ? res.status(401).json({ message: "Unauthorized" }) : res.redirect("/admin");
+  }
   try {
     const decoded = jwt.verify(token, jwtSecret);
     req.userId = decoded.userId;
-    // Aktualizuj lastActiveAt (bez blokowania requesta)
     User.findByIdAndUpdate(req.userId, { lastActiveAt: new Date() }).catch(() => {});
     next();
   } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
+    const isApi = req.path.startsWith("/api/") || req.headers.accept?.includes("application/json");
+    return isApi ? res.status(401).json({ message: "Unauthorized" }) : res.redirect("/admin");
   }
 };
 

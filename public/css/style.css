@@ -2540,7 +2540,8 @@ img {
 .landing-cta { display: flex; gap: 12px; flex-wrap: wrap; }
 .landing-btn-primary { background: var(--accent); color: #fff; font-size: 1rem; padding: 12px 28px; }
 .landing-btn-primary:hover { background: var(--accent-hover); color: #fff; }
-.landing-btn-ghost { font-size: 1rem; padding: 12px 24px; }
+.landing-btn-ghost { font-size: 1rem; padding: 12px 24px; color: #fff; border-color: rgba(255,255,255,0.4); }
+.landing-btn-ghost:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.7); }
 
 .landing-hero-posters {
   flex: 0 0 360px;
