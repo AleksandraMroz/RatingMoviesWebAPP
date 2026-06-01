@@ -262,7 +262,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
     const rated = reviews.filter(r => r.rating != null);
 
     const [totalWatchHistory, followingCount, followersCount, lists] = await Promise.all([
-      WatchHistory.aggregate([{ $match: { userId: mongoose.Types.ObjectId(userId) } }, { $group: { _id: null, total: { $sum: "$runtime" } } }]),
+      WatchHistory.aggregate([{ $match: { userId: new mongoose.Types.ObjectId(userId) } }, { $group: { _id: null, total: { $sum: "$runtime" } } }]),
       Follow.countDocuments({ followerId: userId }),
       Follow.countDocuments({ followingId: userId }),
       List.countDocuments({ userId }),
@@ -309,6 +309,17 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
     res.render("admin/dashboard", {
       message: "Error fetching data",
       currentRoute: "/dashboard",
+      username: "",
+      avatarUrl: null,
+      ratedMoviesCount: 0,
+      watchedCount: 0,
+      watchlistCount: 0,
+      favouritesCount: 0,
+      ratings: [],
+      watched: [],
+      watchlist: [],
+      favourites: [],
+      achievements: [],
     });
   }
 });
@@ -701,7 +712,7 @@ router.get("/profile/:username", async (req, res) => {
       Follow.countDocuments({ followingId: user._id }),
       Follow.countDocuments({ followerId: user._id }),
       List.find({ userId: user._id, isPublic: true }).sort({ createdAt: -1 }),
-      WatchHistory.aggregate([{ $match: { userId: mongoose.Types.ObjectId(user._id) } }, { $group: { _id: null, total: { $sum: "$runtime" } } }]),
+      WatchHistory.aggregate([{ $match: { userId: new mongoose.Types.ObjectId(user._id) } }, { $group: { _id: null, total: { $sum: "$runtime" } } }]),
       List.countDocuments({ userId: user._id }),
     ]);
 
