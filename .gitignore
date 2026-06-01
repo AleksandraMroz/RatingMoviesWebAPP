@@ -1,1 +1,7 @@
-
+node_modules/
+.env
+public/uploads/avatars/*.jpg
+public/uploads/avatars/*.jpeg
+public/uploads/avatars/*.png
+public/uploads/avatars/*.webp
+!public/uploads/avatars/.gitkeep

@@ -1,5 +1,21 @@
 <div class="admin-title">
-  <h2>Witaj, <%= username %>!</h2>
+  <!-- Avatar -->
+  <div class="dashboard-avatar-wrap">
+    <div class="dashboard-avatar" id="avatar-preview-wrap">
+      <% if (avatarUrl) { %>
+        <img src="<%= avatarUrl %>" alt="avatar" id="avatar-img" />
+      <% } else { %>
+        <div class="avatar-placeholder-large" id="avatar-placeholder"><%= username[0].toUpperCase() %></div>
+      <% } %>
+    </div>
+    <label for="avatar-input" class="avatar-upload-btn" title="Zmień zdjęcie profilowe">✎</label>
+    <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" style="display:none" />
+  </div>
+
+  <div class="dashboard-header-text">
+    <h2>Witaj, <%= username %>!</h2>
+    <a href="/profile/<%= username %>" class="profile-link">Zobacz swój profil publiczny →</a>
+  </div>
 
   <div class="dashboard-stats">
     <div class="stat-chip">🎬 Ocenione: <strong><%= ratedMoviesCount %></strong></div>

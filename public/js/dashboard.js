@@ -47,6 +47,26 @@ document.addEventListener("DOMContentLoaded", function () {
     if (event.target == deleteAccountModal) deleteAccountModal.style.display = "none";
   };
 
+  // === Upload avatara ===
+  const avatarInput = document.getElementById("avatar-input");
+  if (avatarInput) {
+    avatarInput.addEventListener("change", () => {
+      const file = avatarInput.files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append("avatar", file);
+      fetch("/upload-avatar", { method: "POST", body: formData })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            const wrap = document.getElementById("avatar-preview-wrap");
+            wrap.innerHTML = `<img src="${data.avatarUrl}?t=${Date.now()}" alt="avatar" id="avatar-img" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+          }
+        })
+        .catch(err => console.error(err));
+    });
+  }
+
   // === Zakładki ===
   const tabBtns = document.querySelectorAll(".tab-btn");
   const tabContents = document.querySelectorAll(".tab-content");

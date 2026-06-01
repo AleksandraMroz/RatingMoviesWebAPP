@@ -4,11 +4,30 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const path = require("path");
 const adminLayout = "../views/layouts/admin";
 const jwtSecret = process.env.JWT_SECRET;
 
 const API_KEY = "987aea1677d0b14e760954964e938196";
 const Review = require("../models/Review");
+
+// Multer — upload avatarów
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "public/uploads/avatars"),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar_${req.userId}_${Date.now()}${ext}`);
+  },
+});
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|webp/;
+    cb(null, allowed.test(file.mimetype));
+  },
+});
 
 const authMiddleware = (req, res, next) => {
   const token = req.cookies.token;
@@ -309,6 +328,54 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Error resetting password:", error);
     res.redirect("/dashboard?error=reset");
+  }
+});
+
+/**
+ * POST /upload-avatar
+ */
+router.post("/upload-avatar", authMiddleware, avatarUpload.single("avatar"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: "Brak pliku" });
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await User.findByIdAndUpdate(req.userId, { avatarUrl });
+    res.json({ success: true, avatarUrl });
+  } catch (error) {
+    console.error("Error uploading avatar:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /profile/:username - Publiczny profil użytkownika
+ */
+router.get("/profile/:username", async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    if (!user) return res.status(404).render("404", { currentRoute: "/" });
+
+    const reviews = await Review.find({ userId: user._id });
+    const watched = reviews.filter(r => r.watchStatus === "watched");
+    const watchlist = reviews.filter(r => r.watchStatus === "watchlist");
+    const favourites = reviews.filter(r => r.watchStatus === "favourite");
+    const rated = reviews.filter(r => r.rating != null);
+
+    res.render("profile", {
+      profileUser: user,
+      ratedMoviesCount: rated.length,
+      watchedCount: watched.length,
+      watchlistCount: watchlist.length,
+      favouritesCount: favourites.length,
+      ratings: rated,
+      watched,
+      watchlist,
+      favourites,
+      currentRoute: "/profile",
+      isLoggedIn: req.session.isLoggedIn,
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).send("Błąd serwera");
   }
 });
 

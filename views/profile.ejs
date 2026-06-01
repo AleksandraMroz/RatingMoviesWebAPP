@@ -1,0 +1,128 @@
+<div class="profile-page">
+
+  <!-- Nagłówek profilu -->
+  <div class="profile-header">
+    <div class="profile-avatar-large">
+      <% if (profileUser.avatarUrl) { %>
+        <img src="<%= profileUser.avatarUrl %>" alt="<%= profileUser.username %>" />
+      <% } else { %>
+        <div class="avatar-placeholder-large"><%= profileUser.username[0].toUpperCase() %></div>
+      <% } %>
+    </div>
+    <div class="profile-header-info">
+      <h1><%= profileUser.username %></h1>
+      <div class="profile-stats">
+        <div class="stat-chip">🎬 Ocenione: <strong><%= ratedMoviesCount %></strong></div>
+        <div class="stat-chip">✓ Obejrzane: <strong><%= watchedCount %></strong></div>
+        <div class="stat-chip">⏱ Do obejrzenia: <strong><%= watchlistCount %></strong></div>
+        <div class="stat-chip">♥ Ulubione: <strong><%= favouritesCount %></strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zakładki -->
+  <div class="dashboard-tabs">
+    <button class="tab-btn active" data-tab="rated">Oceny (<%= ratedMoviesCount %>)</button>
+    <button class="tab-btn" data-tab="watched">Obejrzane (<%= watchedCount %>)</button>
+    <button class="tab-btn" data-tab="watchlist">Do obejrzenia (<%= watchlistCount %>)</button>
+    <button class="tab-btn" data-tab="favourites">Ulubione (<%= favouritesCount %>)</button>
+  </div>
+
+  <!-- Oceny -->
+  <div class="tab-content active" id="tab-rated">
+    <% if (ratings.length === 0) { %>
+      <p class="empty-tab">Ten użytkownik nie ocenił jeszcze żadnego filmu.</p>
+    <% } else { %>
+    <div class="review-grid">
+      <% ratings.forEach(r => { %>
+      <a href="/movies/details?movieId=<%= r.movieId %>" class="review-card-link">
+        <div class="review-card">
+          <img src="https://image.tmdb.org/t/p/w300<%= r.posterPath %>" alt="<%= r.movieTitle %>" />
+          <div class="review-content">
+            <h4><%= r.movieTitle %></h4>
+            <div class="stars"><%- '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) %></div>
+            <% if (r.comment) { %><p class="review-comment">"<%= r.comment %>"</p><% } %>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Obejrzane -->
+  <div class="tab-content" id="tab-watched">
+    <% if (watched.length === 0) { %>
+      <p class="empty-tab">Brak filmów oznaczonych jako obejrzane.</p>
+    <% } else { %>
+    <div class="review-grid">
+      <% watched.forEach(r => { %>
+      <a href="/movies/details?movieId=<%= r.movieId %>" class="review-card-link">
+        <div class="review-card">
+          <img src="https://image.tmdb.org/t/p/w300<%= r.posterPath %>" alt="<%= r.movieTitle %>" />
+          <div class="review-content">
+            <h4><%= r.movieTitle %></h4>
+            <% if (r.watchedDate) { %>
+            <p class="watched-date">📅 <%= new Date(r.watchedDate).toLocaleDateString('pl-PL') %></p>
+            <% } %>
+            <% if (r.runtime) { %><p class="runtime">⏱ <%= r.runtime %> min</p><% } %>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Do obejrzenia -->
+  <div class="tab-content" id="tab-watchlist">
+    <% if (watchlist.length === 0) { %>
+      <p class="empty-tab">Lista "Do obejrzenia" jest pusta.</p>
+    <% } else { %>
+    <div class="review-grid">
+      <% watchlist.forEach(r => { %>
+      <a href="/movies/details?movieId=<%= r.movieId %>" class="review-card-link">
+        <div class="review-card">
+          <img src="https://image.tmdb.org/t/p/w300<%= r.posterPath %>" alt="<%= r.movieTitle %>" />
+          <div class="review-content">
+            <h4><%= r.movieTitle %></h4>
+            <% if (r.runtime) { %><p class="runtime">⏱ <%= r.runtime %> min</p><% } %>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Ulubione -->
+  <div class="tab-content" id="tab-favourites">
+    <% if (favourites.length === 0) { %>
+      <p class="empty-tab">Brak ulubionych filmów.</p>
+    <% } else { %>
+    <div class="review-grid">
+      <% favourites.forEach(r => { %>
+      <a href="/movies/details?movieId=<%= r.movieId %>" class="review-card-link">
+        <div class="review-card">
+          <img src="https://image.tmdb.org/t/p/w300<%= r.posterPath %>" alt="<%= r.movieTitle %>" />
+          <div class="review-content">
+            <h4><%= r.movieTitle %></h4>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+  });
+});
+</script>

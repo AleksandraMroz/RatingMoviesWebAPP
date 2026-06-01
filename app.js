@@ -43,6 +43,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static("public"));
+app.use("/uploads", express.static("public/uploads"));
 
 // Templating Engine
 app.use(expressLayout);
