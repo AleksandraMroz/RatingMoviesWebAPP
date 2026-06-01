@@ -11,6 +11,9 @@ const jwtSecret = process.env.JWT_SECRET;
 
 const API_KEY = "987aea1677d0b14e760954964e938196";
 const Review = require("../models/Review");
+const WatchHistory = require("../models/WatchHistory");
+const Follow = require("../models/Follow");
+const List = require("../models/List");
 
 // Multer — upload avatarów
 const avatarStorage = multer.diskStorage({
@@ -161,6 +164,22 @@ router.post("/set-watch-status", authMiddleware, async (req, res) => {
       updateData,
       { upsert: true, new: true }
     );
+
+    // Zapisz do WatchHistory gdy oznaczono jako obejrzane
+    if (status === "watched") {
+      const alreadyLogged = await WatchHistory.findOne({ userId, movieId });
+      if (!alreadyLogged) {
+        await WatchHistory.create({
+          userId,
+          movieId,
+          movieTitle: movie.title,
+          posterPath: movie.poster_path,
+          runtime: movie.runtime,
+          genres: movie.genres || [],
+          watchedAt: new Date(),
+        });
+      }
+    }
 
     res.json({ success: true, status });
   } catch (error) {
@@ -332,6 +351,95 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
 });
 
 /**
+ * POST /follow/:userId - Obserwuj użytkownika
+ */
+router.post("/follow/:targetId", authMiddleware, async (req, res) => {
+  try {
+    const followerId = req.userId;
+    const followingId = req.params.targetId;
+    if (followerId === followingId) return res.status(400).json({ error: "Nie możesz obserwować siebie" });
+
+    await Follow.findOneAndUpdate(
+      { followerId, followingId },
+      { followerId, followingId },
+      { upsert: true }
+    );
+    res.json({ success: true, action: "followed" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * DELETE /follow/:userId - Przestań obserwować
+ */
+router.delete("/follow/:targetId", authMiddleware, async (req, res) => {
+  try {
+    await Follow.findOneAndDelete({ followerId: req.userId, followingId: req.params.targetId });
+    res.json({ success: true, action: "unfollowed" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /lists - Listy zalogowanego użytkownika
+ */
+router.get("/lists", authMiddleware, async (req, res) => {
+  try {
+    const lists = await List.find({ userId: req.userId }).sort({ createdAt: -1 });
+    res.json(lists);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /lists - Utwórz nową listę
+ */
+router.post("/lists", authMiddleware, async (req, res) => {
+  try {
+    const { name, description, isPublic } = req.body;
+    const list = await List.create({ userId: req.userId, name, description, isPublic: isPublic !== "false" });
+    res.json({ success: true, list });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /lists/:listId/add - Dodaj film do listy
+ */
+router.post("/lists/:listId/add", authMiddleware, async (req, res) => {
+  try {
+    const { movieId, movieTitle, posterPath } = req.body;
+    const list = await List.findOne({ _id: req.params.listId, userId: req.userId });
+    if (!list) return res.status(404).json({ error: "Lista nie istnieje" });
+
+    const alreadyAdded = list.movies.some(m => m.movieId === movieId);
+    if (!alreadyAdded) {
+      list.movies.push({ movieId, movieTitle, posterPath });
+      await list.save();
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * DELETE /lists/:listId - Usuń listę
+ */
+router.delete("/lists/:listId", authMiddleware, async (req, res) => {
+  try {
+    await List.findOneAndDelete({ _id: req.params.listId, userId: req.userId });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * POST /upload-avatar
  */
 router.post("/upload-avatar", authMiddleware, avatarUpload.single("avatar"), async (req, res) => {
@@ -352,7 +460,7 @@ router.post("/upload-avatar", authMiddleware, avatarUpload.single("avatar"), asy
 router.get("/profile/:username", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username });
-    if (!user) return res.status(404).render("404", { currentRoute: "/" });
+    if (!user) return res.status(404).send("Nie znaleziono użytkownika");
 
     const reviews = await Review.find({ userId: user._id });
     const watched = reviews.filter(r => r.watchStatus === "watched");
@@ -360,16 +468,42 @@ router.get("/profile/:username", async (req, res) => {
     const favourites = reviews.filter(r => r.watchStatus === "favourite");
     const rated = reviews.filter(r => r.rating != null);
 
+    const [followersCount, followingCount, publicLists] = await Promise.all([
+      Follow.countDocuments({ followingId: user._id }),
+      Follow.countDocuments({ followerId: user._id }),
+      List.find({ userId: user._id, isPublic: true }).sort({ createdAt: -1 }),
+    ]);
+
+    // Sprawdź czy zalogowany użytkownik obserwuje ten profil
+    let isFollowing = false;
+    let currentUserId = null;
+    const token = req.cookies.token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, jwtSecret);
+        currentUserId = decoded.userId;
+        if (currentUserId !== user._id.toString()) {
+          const follow = await Follow.findOne({ followerId: currentUserId, followingId: user._id });
+          isFollowing = !!follow;
+        }
+      } catch (e) {}
+    }
+
     res.render("profile", {
       profileUser: user,
       ratedMoviesCount: rated.length,
       watchedCount: watched.length,
       watchlistCount: watchlist.length,
       favouritesCount: favourites.length,
+      followersCount,
+      followingCount,
       ratings: rated,
       watched,
       watchlist,
       favourites,
+      publicLists,
+      isFollowing,
+      currentUserId,
       currentRoute: "/profile",
       isLoggedIn: req.session.isLoggedIn,
     });

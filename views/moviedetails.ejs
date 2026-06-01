@@ -42,7 +42,7 @@
               <div class="avatar-placeholder"><%= r.user ? r.user.username[0].toUpperCase() : '?' %></div>
             <% } %>
           </div>
-          <strong><%= r.user ? r.user.username : 'Użytkownik' %></strong>
+          <a href="/profile/<%= r.user ? r.user.username : '' %>" class="reviewer-name"><%= r.user ? r.user.username : 'Użytkownik' %></a>
         </div>
         <div class="reviewer-rating">
           <span class="stars"><%- '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) %></span>

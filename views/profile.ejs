@@ -11,12 +11,26 @@
     </div>
     <div class="profile-header-info">
       <h1><%= profileUser.username %></h1>
+      <div class="profile-follow-stats">
+        <span><strong><%= followersCount %></strong> obserwujących</span>
+        <span><strong><%= followingCount %></strong> obserwowanych</span>
+      </div>
       <div class="profile-stats">
         <div class="stat-chip">🎬 Ocenione: <strong><%= ratedMoviesCount %></strong></div>
         <div class="stat-chip">✓ Obejrzane: <strong><%= watchedCount %></strong></div>
         <div class="stat-chip">⏱ Do obejrzenia: <strong><%= watchlistCount %></strong></div>
         <div class="stat-chip">♥ Ulubione: <strong><%= favouritesCount %></strong></div>
       </div>
+
+      <% if (isLoggedIn && currentUserId && currentUserId !== profileUser._id.toString()) { %>
+      <button
+        id="follow-btn"
+        class="follow-btn <%= isFollowing ? 'following' : '' %>"
+        data-user-id="<%= profileUser._id %>"
+      >
+        <%= isFollowing ? '✓ Obserwujesz' : '+ Obserwuj' %>
+      </button>
+      <% } %>
     </div>
   </div>
 
@@ -26,6 +40,9 @@
     <button class="tab-btn" data-tab="watched">Obejrzane (<%= watchedCount %>)</button>
     <button class="tab-btn" data-tab="watchlist">Do obejrzenia (<%= watchlistCount %>)</button>
     <button class="tab-btn" data-tab="favourites">Ulubione (<%= favouritesCount %>)</button>
+    <% if (publicLists.length > 0) { %>
+    <button class="tab-btn" data-tab="lists">Listy (<%= publicLists.length %>)</button>
+    <% } %>
   </div>
 
   <!-- Oceny -->
@@ -114,9 +131,33 @@
     </div>
     <% } %>
   </div>
+
+  <!-- Własne listy -->
+  <% if (publicLists.length > 0) { %>
+  <div class="tab-content" id="tab-lists">
+    <div class="custom-lists-grid">
+      <% publicLists.forEach(list => { %>
+      <div class="custom-list-card">
+        <h4><%= list.name %></h4>
+        <% if (list.description) { %><p class="list-desc"><%= list.description %></p><% } %>
+        <p class="list-count"><%= list.movies.length %> filmów</p>
+        <div class="list-posters">
+          <% list.movies.slice(0, 4).forEach(m => { %>
+            <% if (m.posterPath) { %>
+            <img src="https://image.tmdb.org/t/p/w92<%= m.posterPath %>" alt="<%= m.movieTitle %>" />
+            <% } %>
+          <% }) %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
 </div>
 
 <script>
+// Zakładki
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -125,4 +166,23 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
   });
 });
+
+// Follow / Unfollow
+const followBtn = document.getElementById("follow-btn");
+if (followBtn) {
+  followBtn.addEventListener("click", () => {
+    const userId = followBtn.dataset.userId;
+    const isFollowing = followBtn.classList.contains("following");
+    fetch(`/follow/${userId}`, {
+      method: isFollowing ? "DELETE" : "POST",
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          followBtn.classList.toggle("following");
+          followBtn.textContent = isFollowing ? "+ Obserwuj" : "✓ Obserwujesz";
+        }
+      });
+  });
+}
 </script>
