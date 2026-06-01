@@ -73,25 +73,17 @@
     </div>
     <div class="home-movies-row">
       <% trending.forEach(m => { %>
-      <div class="home-movie-card-wrap">
-        <a href="/movies/details?movieId=<%= m.id %>" class="home-movie-card">
-          <% if (m.poster_path) { %>
-            <img src="https://image.tmdb.org/t/p/w300<%= m.poster_path %>" alt="<%= m.title %>" loading="lazy" />
-          <% } else { %>
-            <div class="home-no-poster"></div>
-          <% } %>
-          <div class="home-movie-meta">
-            <% if (m.vote_average) { %><span class="home-vote"><%= m.vote_average.toFixed(1) %></span><% } %>
-          </div>
-          <span class="home-movie-title"><%= m.title %></span>
-        </a>
-        <div class="home-card-actions">
-          <button class="cqa-btn cqa-watched" data-movie-id="<%= m.id %>" data-status="watched">Obejrzane</button>
-          <button class="cqa-btn cqa-watchlist" data-movie-id="<%= m.id %>" data-status="watchlist">Do obejrzenia</button>
-          <button class="cqa-btn cqa-fav" data-movie-id="<%= m.id %>" data-status="favourite">Ulubione</button>
-          <button class="cqa-btn cqa-rate" data-movie-id="<%= m.id %>" data-movie-title="<%= m.title.replace(/"/g,'&quot;') %>">Oceń</button>
+      <a href="/movies/details?movieId=<%= m.id %>" class="home-movie-card">
+        <% if (m.poster_path) { %>
+          <img src="https://image.tmdb.org/t/p/w300<%= m.poster_path %>" alt="<%= m.title %>" loading="lazy" />
+        <% } else { %>
+          <div class="home-no-poster"></div>
+        <% } %>
+        <div class="home-movie-meta">
+          <% if (m.vote_average) { %><span class="home-vote"><%= m.vote_average.toFixed(1) %></span><% } %>
         </div>
-      </div>
+        <span class="home-movie-title"><%= m.title %></span>
+      </a>
       <% }) %>
     </div>
   </div>

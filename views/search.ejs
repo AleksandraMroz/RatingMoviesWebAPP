@@ -64,16 +64,14 @@
   <p class="search-count">Znaleziono <strong><%= movies.length %></strong> filmów</p>
   <div class="search-results-grid">
     <% movies.forEach(movie => { %>
-    <div class="search-movie-card" data-movie-id="<%= movie.id %>" data-movie-title="<%= movie.title.replace(/"/g,'&quot;') %>" data-poster="<%= movie.poster_path || '' %>">
-      <a href="/movies/details?movieId=<%= movie.id %>" class="search-card-poster-link">
-        <% if (movie.poster_path) { %>
-          <img src="https://image.tmdb.org/t/p/w300<%= movie.poster_path %>" alt="<%= movie.title %>" loading="lazy" />
-        <% } else { %>
-          <div class="search-no-poster"></div>
-        <% } %>
-      </a>
+    <a href="/movies/details?movieId=<%= movie.id %>" class="search-movie-card">
+      <% if (movie.poster_path) { %>
+        <img src="https://image.tmdb.org/t/p/w300<%= movie.poster_path %>" alt="<%= movie.title %>" loading="lazy" />
+      <% } else { %>
+        <div class="search-no-poster"></div>
+      <% } %>
       <div class="search-card-info">
-        <h3><a href="/movies/details?movieId=<%= movie.id %>"><%= movie.title %></a></h3>
+        <h3><%= movie.title %></h3>
         <div class="search-card-meta">
           <% if (movie.release_date) { %><span><%= movie.release_date.slice(0,4) %></span><% } %>
           <% if (movie.vote_average) { %><span class="search-vote"><%= movie.vote_average.toFixed(1) %></span><% } %>
@@ -81,14 +79,8 @@
         <% if (movie.overview) { %>
         <p class="search-card-overview"><%= movie.overview.slice(0, 110) %><% if (movie.overview.length > 110) { %>…<% } %></p>
         <% } %>
-        <div class="card-quick-actions">
-          <button class="cqa-btn cqa-watched" data-movie-id="<%= movie.id %>" data-status="watched" title="Obejrzane">Obejrzane</button>
-          <button class="cqa-btn cqa-watchlist" data-movie-id="<%= movie.id %>" data-status="watchlist" title="Do obejrzenia">Do obejrzenia</button>
-          <button class="cqa-btn cqa-fav" data-movie-id="<%= movie.id %>" data-status="favourite" title="Ulubione">Ulubione</button>
-          <button class="cqa-btn cqa-rate" data-movie-id="<%= movie.id %>" data-movie-title="<%= movie.title.replace(/"/g,'&quot;') %>" title="Oceń film">Oceń</button>
-        </div>
       </div>
-    </div>
+    </a>
     <% }) %>
   </div>
   <% } %>

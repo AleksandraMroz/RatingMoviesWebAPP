@@ -31,9 +31,66 @@
           <li>Brak dostępnych informacji o obsadzie.</li>
         <% } %>
       </ul>
-      <a href="/movies/rate?movieId=<%= movie.id %>" class="btn">Oceń ten film</a>
+      <!-- Status i ulubione -->
+      <div class="watch-status-buttons" id="detail-actions" data-movie-id="<%= movie.id %>">
+        <button class="status-btn" id="detail-btn-watched" data-status="watched">&#10003; Obejrzane</button>
+        <button class="status-btn" id="detail-btn-watchlist" data-status="watchlist">Do obejrzenia</button>
+        <button class="status-btn status-btn-fav" id="detail-btn-fav" data-status="favourite">&#9829; Ulubione</button>
+      </div>
+      <button class="btn" id="detail-rate-btn" data-movie-id="<%= movie.id %>" data-movie-title="<%= movie.title.replace(/"/g, '&quot;') %>">Oceń ten film</button>
     </div>
   </div>
+
+<script>
+(function(){
+  const movieId = "<%= movie.id %>";
+  const watched = document.getElementById("detail-btn-watched");
+  const watchlist = document.getElementById("detail-btn-watchlist");
+  const fav = document.getElementById("detail-btn-fav");
+
+  // Pobierz aktualny status
+  fetch("/my-status/" + movieId, { credentials: "same-origin" })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data) return;
+      if (data.watchStatus === "watched") watched.classList.add("active");
+      if (data.watchStatus === "watchlist") watchlist.classList.add("active");
+      if (data.isFavourite) fav.classList.add("active");
+    }).catch(()=>{});
+
+  function setStatus(status) {
+    fetch("/set-watch-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ movieId, status }),
+      credentials: "same-origin"
+    }).then(r => {
+      if (r.status === 401) { window.location.href = "/admin"; return; }
+      if (r.ok) {
+        if (status === "watched") { watched.classList.add("active"); watchlist.classList.remove("active"); }
+        else if (status === "watchlist") { watchlist.classList.add("active"); watched.classList.remove("active"); }
+        else if (status === "favourite") { fav.classList.toggle("active"); }
+      }
+    });
+  }
+
+  watched.onclick = () => setStatus("watched");
+  watchlist.onclick = () => setStatus("watchlist");
+  fav.onclick = () => setStatus("favourite");
+
+  // Przycisk "Oceń ten film" → otwiera globalny modal
+  document.getElementById("detail-rate-btn").onclick = function() {
+    const modal = document.getElementById("rate-modal");
+    if (!modal) { window.location.href = "/movies/rate?movieId=" + movieId; return; }
+    document.getElementById("rate-modal-movie-id").value = movieId;
+    document.getElementById("rate-modal-title").textContent = this.dataset.movieTitle || "Oceń film";
+    document.getElementById("rate-modal-rating").value = "0";
+    document.getElementById("rate-modal-comment").value = "";
+    document.querySelectorAll("#rate-modal-stars .star-pick").forEach(s => s.classList.remove("active"));
+    modal.style.display = "block";
+  };
+})();
+</script>
 
   <!-- Oceny użytkowników -->
   <% if (publicReviews && publicReviews.length > 0) { %>
