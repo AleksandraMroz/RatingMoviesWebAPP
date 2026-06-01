@@ -22,10 +22,10 @@ document.addEventListener("DOMContentLoaded", function () {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     }).then((response) => {
       if (response.ok) {
-        alert("Hasło zostało zmienione.");
         resetPasswordModal.style.display = "none";
+        showDashToast("✅ Hasło zostało zmienione.", "success");
       } else {
-        alert("Błąd przy zmianie hasła.");
+        showDashToast("❌ Błąd przy zmianie hasła.", "error");
       }
     });
   });
@@ -33,13 +33,23 @@ document.addEventListener("DOMContentLoaded", function () {
   confirmDeleteAccount.onclick = function () {
     fetch("/delete-account", { method: "POST" }).then((response) => {
       if (response.ok) {
-        alert("Konto zostało usunięte.");
-        window.location.href = "/";
+        deleteAccountModal.style.display = "none";
+        showDashToast("Konto zostało usunięte. Za chwilę zostaniesz przekierowany...", "success");
+        setTimeout(() => { window.location.href = "/"; }, 2000);
       } else {
-        alert("Błąd przy usuwaniu konta.");
+        showDashToast("❌ Błąd przy usuwaniu konta.", "error");
       }
     });
   };
+
+  function showDashToast(msg, type) {
+    const t = document.createElement("div");
+    t.className = "toast toast-" + (type === "error" ? "error" : "success");
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add("toast-show"), 10);
+    setTimeout(() => { t.classList.remove("toast-show"); setTimeout(() => t.remove(), 400); }, 3500);
+  }
 
   window.onclick = function (event) {
     if (event.target == resetPasswordModal) resetPasswordModal.style.display = "none";

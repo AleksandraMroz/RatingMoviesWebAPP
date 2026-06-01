@@ -756,7 +756,9 @@ img {
   max-width: 480px;
   text-align: center;
 }
-.modal-content h2 {
+.modal-content h2,
+.modal-content p,
+.modal-content label {
   color: var(--black);
 }
 
