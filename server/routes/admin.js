@@ -353,6 +353,92 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
 });
 
 /**
+ * GET /api/dashboard-stats - Dane dla D3.js
+ */
+router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const [watchHistory, reviews] = await Promise.all([
+      WatchHistory.find({ userId }),
+      Review.find({ userId }),
+    ]);
+
+    // 1. Łączny czas
+    const totalMinutes = watchHistory.reduce((sum, w) => sum + (w.runtime || 0), 0);
+
+    // 2. Aktywność dzień po dniu (ostatnie 365 dni)
+    const activityMap = {};
+    watchHistory.forEach(w => {
+      const day = new Date(w.watchedAt).toISOString().slice(0, 10);
+      activityMap[day] = (activityMap[day] || 0) + 1;
+    });
+    const activityData = Object.entries(activityMap).map(([date, count]) => ({ date, count }));
+
+    // 3. Rozkład gatunków
+    const genreMap = {};
+    watchHistory.forEach(w => {
+      (w.genres || []).forEach(g => {
+        genreMap[g.name] = (genreMap[g.name] || 0) + 1;
+      });
+    });
+    const genreData = Object.entries(genreMap)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
+    // 4. Średnia ocena miesięcznie
+    const ratingsByMonth = {};
+    reviews.filter(r => r.rating != null).forEach(r => {
+      const month = new Date(r.createdAt).toISOString().slice(0, 7);
+      if (!ratingsByMonth[month]) ratingsByMonth[month] = { sum: 0, count: 0 };
+      ratingsByMonth[month].sum += r.rating;
+      ratingsByMonth[month].count += 1;
+    });
+    const ratingsOverTime = Object.entries(ratingsByMonth)
+      .map(([month, { sum, count }]) => ({ month, avg: +(sum / count).toFixed(2), count }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    // 5. Czas oglądania miesięcznie
+    const minutesByMonth = {};
+    watchHistory.forEach(w => {
+      const month = new Date(w.watchedAt).toISOString().slice(0, 7);
+      minutesByMonth[month] = (minutesByMonth[month] || 0) + (w.runtime || 0);
+    });
+    const watchTimeByMonth = Object.entries(minutesByMonth)
+      .map(([month, minutes]) => ({ month, hours: +(minutes / 60).toFixed(1) }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    // 6. Rozkład ocen (ile filmów z oceną 1,2,3,4,5)
+    const ratingDist = [1, 2, 3, 4, 5].map(star => ({
+      star,
+      count: reviews.filter(r => r.rating === star).length,
+    }));
+
+    // 7. Szacowany czas listy "Do obejrzenia"
+    const watchlistRuntime = reviews
+      .filter(r => r.watchStatus === "watchlist")
+      .reduce((sum, r) => sum + (r.runtime || 90), 0);
+
+    res.json({
+      totalMinutes,
+      totalHours: Math.floor(totalMinutes / 60),
+      watchedCount: watchHistory.length,
+      ratedCount: reviews.filter(r => r.rating != null).length,
+      watchlistMinutes: watchlistRuntime,
+      activityData,
+      genreData,
+      ratingsOverTime,
+      watchTimeByMonth,
+      ratingDist,
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * GET /following - Strona obserwowanych użytkowników
  */
 router.get("/following", authMiddleware, async (req, res) => {

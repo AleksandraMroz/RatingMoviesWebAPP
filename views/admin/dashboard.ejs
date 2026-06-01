@@ -54,14 +54,76 @@
 
 <!-- Zakładki -->
 <div class="dashboard-tabs">
-  <button class="tab-btn active" data-tab="rated">Oceny (<%= ratedMoviesCount %>)</button>
+  <button class="tab-btn active" data-tab="viz">📊 Dashboard</button>
+  <button class="tab-btn" data-tab="rated">Oceny (<%= ratedMoviesCount %>)</button>
   <button class="tab-btn" data-tab="watched">Obejrzane (<%= watchedCount %>)</button>
   <button class="tab-btn" data-tab="watchlist">Do obejrzenia (<%= watchlistCount %>)</button>
   <button class="tab-btn" data-tab="favourites">Ulubione (<%= favouritesCount %>)</button>
 </div>
 
+<!-- Dashboard D3.js -->
+<div class="tab-content active" id="tab-viz">
+  <div class="viz-loading" id="viz-loading">Ładowanie danych...</div>
+
+  <!-- Duże liczby -->
+  <div class="viz-kpi-row" id="viz-kpis" style="display:none">
+    <div class="viz-kpi">
+      <span class="viz-kpi-value" id="kpi-hours">—</span>
+      <span class="viz-kpi-label">godzin obejrzanych</span>
+    </div>
+    <div class="viz-kpi">
+      <span class="viz-kpi-value" id="kpi-watched">—</span>
+      <span class="viz-kpi-label">filmów obejrzanych</span>
+    </div>
+    <div class="viz-kpi">
+      <span class="viz-kpi-value" id="kpi-rated">—</span>
+      <span class="viz-kpi-label">ocenionych filmów</span>
+    </div>
+    <div class="viz-kpi">
+      <span class="viz-kpi-value" id="kpi-watchlist">—</span>
+      <span class="viz-kpi-label">h na liście "Do obejrzenia"</span>
+    </div>
+  </div>
+
+  <!-- Wiersz 1: Aktywność + Czas miesięcznie -->
+  <div class="viz-row" id="viz-charts" style="display:none">
+    <div class="viz-card viz-card-full">
+      <h4 class="viz-title">Aktywność — ostatnie 12 miesięcy</h4>
+      <div id="chart-activity"></div>
+    </div>
+  </div>
+
+  <div class="viz-row" id="viz-row2" style="display:none">
+    <div class="viz-card">
+      <h4 class="viz-title">Gatunki filmów</h4>
+      <div id="chart-genres"></div>
+    </div>
+    <div class="viz-card">
+      <h4 class="viz-title">Czas oglądania miesięcznie (h)</h4>
+      <div id="chart-watchtime"></div>
+    </div>
+  </div>
+
+  <div class="viz-row" id="viz-row3" style="display:none">
+    <div class="viz-card">
+      <h4 class="viz-title">Rozkład ocen</h4>
+      <div id="chart-ratings-dist"></div>
+    </div>
+    <div class="viz-card">
+      <h4 class="viz-title">Średnia ocena miesięcznie</h4>
+      <div id="chart-ratings-time"></div>
+    </div>
+  </div>
+
+  <div id="viz-empty" style="display:none" class="empty-state">
+    <div class="empty-state-icon">📊</div>
+    <h3>Brak danych do wyświetlenia</h3>
+    <p>Oznacz kilka filmów jako obejrzane i oceń je, aby zobaczyć swój dashboard.</p>
+  </div>
+</div>
+
 <!-- Oceny -->
-<div class="tab-content active" id="tab-rated">
+<div class="tab-content" id="tab-rated">
   <% if (ratings.length === 0) { %>
     <p class="empty-tab">Nie oceniłeś jeszcze żadnego filmu.</p>
   <% } else { %>
