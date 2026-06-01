@@ -5,8 +5,8 @@
   --bg-secondary: #f4f4f8;
   --nav-bg: #0f0f1a;
   --nav-text: #e8e8f0;
-  --accent: #6c63ff;
-  --accent-hover: #574fd6;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
   --black: #1c1c2e;
   --gray: #6b6b80;
   --gray-light: #e2e2ee;
@@ -732,6 +732,13 @@ img {
   z-index: 9999;
   line-height: 1.5;
   max-width: 180px;
+}
+
+.viz-no-data {
+  color: var(--gray);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px 0;
 }
 
 @media (max-width: 768px) {
