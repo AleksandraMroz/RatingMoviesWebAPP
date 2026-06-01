@@ -2022,3 +2022,185 @@ img {
   .similar-section { flex: 1; }
   .nav-search-dropdown { width: 280px; right: -60px; }
 }
+
+/* ===== TOAST ===== */
+.rating-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: #1a1a2e;
+  color: #fff;
+  padding: 14px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  z-index: 9999;
+  animation: toast-in 0.3s ease;
+  transition: opacity 0.4s, transform 0.4s;
+}
+.rating-toast button {
+  background: none; border: none; color: rgba(255,255,255,0.5);
+  cursor: pointer; font-size: 1.1rem; padding: 0; line-height: 1;
+}
+.rating-toast.toast-hide { opacity: 0; transform: translateY(12px); pointer-events: none; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* ===== STAR PICKER ===== */
+.star-picker { display: flex; gap: 4px; margin-bottom: 12px; }
+.star-pick {
+  font-size: 1.8rem; cursor: pointer; color: var(--gray-light);
+  transition: color 0.15s, transform 0.1s;
+  user-select: none;
+}
+.star-pick.active { color: #f59e0b; }
+.star-pick:hover { transform: scale(1.15); }
+
+/* ===== STATUS BUTTONS (ulubione niezależne) ===== */
+.status-btn-fav.active {
+  background: #fee2e2 !important;
+  color: #e11d48 !important;
+  border-color: #e11d48 !important;
+}
+
+/* ===== BTN GHOST ===== */
+.btn-ghost {
+  background: transparent;
+  border: 1.5px solid var(--gray-light);
+  color: var(--gray);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+.btn-add-to-list {
+  margin-top: 8px;
+  font-size: 0.88rem;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== LIST MODAL ===== */
+.list-modal-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--gray-light);
+}
+.list-modal-item:last-child { border-bottom: none; }
+.list-quick-create h4 { margin: 0 0 8px; font-size: 0.9rem; }
+.list-quick-create input {
+  width: 100%; padding: 8px 12px; border: 1.5px solid var(--gray-light);
+  border-radius: 8px; font-family: inherit; margin-bottom: 8px;
+}
+
+/* ===== LISTS TAB ===== */
+.lists-toolbar { margin-bottom: 16px; }
+.create-list-form {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.create-list-form input,
+.create-list-form textarea {
+  padding: 10px 14px;
+  border: 1.5px solid var(--gray-light);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: var(--bg);
+}
+.create-list-form input:focus,
+.create-list-form textarea:focus { outline: none; border-color: var(--accent); }
+.list-public-toggle {
+  display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;
+}
+.lists-container { display: flex; flex-direction: column; gap: 16px; }
+.lists-loading { color: var(--gray); font-size: 0.9rem; }
+
+.list-card {
+  display: flex;
+  gap: 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  align-items: flex-start;
+  position: relative;
+}
+.list-card-cover {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--card-bg);
+}
+.list-card-cover img { width: 100%; height: 100%; object-fit: cover; }
+.list-cover-ph { display: flex; align-items: center; justify-content: center; font-size: 2rem; grid-column: 1/-1; }
+.list-card-info { flex: 1; min-width: 0; }
+.list-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.list-card-top h4 { margin: 0; font-size: 0.95rem; }
+.list-card-top h4 a { color: var(--black); text-decoration: none; }
+.list-card-top h4 a:hover { color: var(--accent); }
+.list-badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 99px; }
+.list-badge.public { background: #dcfce7; color: #166534; }
+.list-badge.private { background: #fef3c7; color: #92400e; }
+.list-card-desc { font-size: 0.82rem; color: var(--gray); margin: 2px 0 6px; }
+.list-card-meta { font-size: 0.8rem; color: var(--gray); margin: 0 0 8px; }
+
+.list-movies-mini { display: flex; flex-wrap: wrap; gap: 6px; }
+.list-movie-chip {
+  background: var(--bg);
+  border: 1px solid var(--gray-light);
+  border-radius: 99px;
+  padding: 2px 10px 2px 10px;
+  font-size: 0.75rem;
+  display: flex; align-items: center; gap: 4px;
+}
+.list-movie-chip a { color: var(--black); text-decoration: none; }
+.list-movie-chip a:hover { color: var(--accent); }
+.remove-from-list {
+  background: none; border: none; color: var(--gray); cursor: pointer;
+  font-size: 0.9rem; padding: 0; line-height: 1;
+}
+.remove-from-list:hover { color: var(--red); }
+.list-movie-more { font-size: 0.75rem; color: var(--gray); align-self: center; }
+
+.delete-list-btn {
+  background: none; border: none; cursor: pointer; font-size: 1rem;
+  color: var(--gray); padding: 4px; align-self: flex-start; flex-shrink: 0;
+  transition: color 0.15s;
+}
+.delete-list-btn:hover { color: var(--red); }
+
+/* ===== LIST PUBLIC PAGE ===== */
+.list-public-page { padding: 32px 0; }
+.list-public-header {
+  display: flex; gap: 28px; align-items: flex-start; margin-bottom: 32px;
+}
+.list-cover {
+  width: 180px; height: 180px; border-radius: 12px; overflow: hidden;
+  flex-shrink: 0; background: var(--card-bg);
+}
+.list-cover-collage {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 100%; height: 100%;
+}
+.list-cover-collage img { width: 100%; height: 100%; object-fit: cover; }
+.list-cover-single { width: 100%; height: 100%; object-fit: cover; }
+.list-cover-placeholder { display: flex; align-items: center; justify-content: center; font-size: 4rem; height: 100%; }
+.list-public-meta h1 { margin: 0 0 8px; }
+.list-desc { color: var(--gray); margin: 0 0 12px; }
+.list-author { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 0.9rem; }
+.list-author-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+.list-author a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.list-stats-row { display: flex; align-items: center; gap: 12px; font-size: 0.88rem; color: var(--gray); }
+.list-item-num { display: block; font-size: 0.72rem; color: var(--gray); margin-bottom: 2px; }

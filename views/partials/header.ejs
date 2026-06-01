@@ -10,7 +10,7 @@
         <li><a href="/" class="<%= isActiveRoute('/', currentRoute) %>">Główna</a></li>
         <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
         <li><a href="/dashboard" class="<%= isActiveRoute('/dashboard', currentRoute) %>">Mój profil</a></li>
-        <li><a href="/feed" class="<%= isActiveRoute('/feed', currentRoute) %>">Feed</a></li>
+        <li><a href="/feed" class="<%= isActiveRoute('/feed', currentRoute) %>">Aktywność</a></li>
         <li><a href="/following" class="<%= isActiveRoute('/following', currentRoute) %>">Obserwowane</a></li>
         <li><a href="/discover" class="<%= isActiveRoute('/discover', currentRoute) %>">Odkryj</a></li>
         <% } else { %>

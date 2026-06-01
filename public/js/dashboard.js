@@ -82,8 +82,90 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (tab === "recommend" && !recommendLoaded) loadRecommendations();
       if (tab === "community" && !communityLoaded) loadCommunityStats();
+      if (tab === "lists") renderLists();
     });
   });
+
+  // === Listy ===
+  const createListBtn = document.getElementById("create-list-btn");
+  const createListForm = document.getElementById("create-list-form");
+  const saveListBtn = document.getElementById("save-list-btn");
+  const cancelListBtn = document.getElementById("cancel-list-btn");
+
+  if (createListBtn) {
+    createListBtn.onclick = () => { createListForm.style.display = "block"; };
+    cancelListBtn.onclick = () => { createListForm.style.display = "none"; };
+
+    saveListBtn.onclick = async () => {
+      const name = document.getElementById("list-name-input").value.trim();
+      if (!name) return;
+      const desc = document.getElementById("list-desc-input").value.trim();
+      const isPublic = document.getElementById("list-public-check").checked;
+      await fetch("/lists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description: desc, isPublic }),
+      });
+      createListForm.style.display = "none";
+      document.getElementById("list-name-input").value = "";
+      document.getElementById("list-desc-input").value = "";
+      renderLists();
+    };
+  }
+
+  async function renderLists() {
+    const container = document.getElementById("lists-container");
+    if (!container) return;
+    container.innerHTML = "<p class='lists-loading'>Ładowanie...</p>";
+    const res = await fetch("/lists");
+    const lists = await res.json();
+    if (!lists.length) {
+      container.innerHTML = "<p class='empty-tab'>Nie masz jeszcze żadnych list. Kliknij \"+ Nowa lista\" żeby zacząć!</p>";
+      return;
+    }
+    container.innerHTML = lists.map(l => `
+      <div class="list-card" data-id="${l._id}">
+        <div class="list-card-cover">
+          ${l.movies.slice(0,4).filter(m => m.posterPath).map(m =>
+            `<img src="https://image.tmdb.org/t/p/w92${m.posterPath}" alt="" />`
+          ).join("") || '<span class="list-cover-ph">🎬</span>'}
+        </div>
+        <div class="list-card-info">
+          <div class="list-card-top">
+            <h4><a href="/list/${l._id}">${l.name}</a></h4>
+            <span class="list-badge ${l.isPublic ? 'public' : 'private'}">${l.isPublic ? '🌍' : '🔒'}</span>
+          </div>
+          ${l.description ? `<p class="list-card-desc">${l.description}</p>` : ""}
+          <p class="list-card-meta">🎬 ${l.movies.length} filmów</p>
+          ${l.movies.length > 0 ? `
+          <div class="list-movies-mini">
+            ${l.movies.slice(0,6).map(m => `
+              <span class="list-movie-chip">
+                <a href="/movies/details?movieId=${m.movieId}">${m.movieTitle}</a>
+                <button class="remove-from-list" data-list="${l._id}" data-movie="${m.movieId}" title="Usuń">×</button>
+              </span>`).join("")}
+            ${l.movies.length > 6 ? `<span class="list-movie-more">+${l.movies.length - 6} więcej</span>` : ""}
+          </div>` : ""}
+        </div>
+        <button class="delete-list-btn" data-id="${l._id}" title="Usuń listę">🗑</button>
+      </div>`).join("");
+
+    container.querySelectorAll(".delete-list-btn").forEach(btn => {
+      btn.onclick = async () => {
+        if (!confirm("Usunąć tę listę?")) return;
+        await fetch(`/lists/${btn.dataset.id}`, { method: "DELETE" });
+        renderLists();
+      };
+    });
+
+    container.querySelectorAll(".remove-from-list").forEach(btn => {
+      btn.onclick = async (e) => {
+        e.preventDefault();
+        await fetch(`/lists/${btn.dataset.list}/movies/${btn.dataset.movie}`, { method: "DELETE" });
+        renderLists();
+      };
+    });
+  }
 
   // === Rekomendacje ===
   async function loadRecommendations() {

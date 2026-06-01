@@ -139,7 +139,7 @@ router.get("/movies/details", async (req, res) => {
       user: r.userId,
     }));
 
-    res.render("moviedetails", { movie, publicReviews, currentRoute: "/movies/details" });
+    res.render("moviedetails", { movie, publicReviews, rated: req.query.rated === "1", currentRoute: "/movies/details" });
   } catch (error) {
     console.error("Error fetching movie details:", error);
     res.render("moviedetails", { movie: {}, publicReviews: [], currentRoute: "/movies/details" });

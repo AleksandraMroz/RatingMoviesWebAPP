@@ -1,0 +1,57 @@
+<div class="list-public-page">
+  <div class="list-public-header">
+    <div class="list-cover">
+      <% const posters = list.movies.slice(0,4).map(m => m.posterPath).filter(Boolean); %>
+      <% if (posters.length >= 4) { %>
+        <div class="list-cover-collage">
+          <% posters.forEach(p => { %>
+            <img src="https://image.tmdb.org/t/p/w200<%= p %>" alt="" />
+          <% }) %>
+        </div>
+      <% } else if (posters.length > 0) { %>
+        <img src="https://image.tmdb.org/t/p/w300<%= posters[0] %>" alt="" class="list-cover-single" />
+      <% } else { %>
+        <div class="list-cover-placeholder">🎬</div>
+      <% } %>
+    </div>
+    <div class="list-public-meta">
+      <h1><%= list.name %></h1>
+      <% if (list.description) { %><p class="list-desc"><%= list.description %></p><% } %>
+      <div class="list-author">
+        <% if (list.userId.avatarUrl) { %>
+          <img src="<%= list.userId.avatarUrl %>" alt="<%= list.userId.username %>" class="list-author-avatar" />
+        <% } else { %>
+          <div class="avatar-placeholder list-author-avatar"><%= list.userId.username[0].toUpperCase() %></div>
+        <% } %>
+        <span>Lista autorstwa <a href="/profile/<%= list.userId.username %>"><%= list.userId.username %></a></span>
+      </div>
+      <div class="list-stats-row">
+        <span>🎬 <%= list.movies.length %> filmów</span>
+        <span class="list-badge <%= list.isPublic ? 'public' : 'private' %>"><%= list.isPublic ? '🌍 Publiczna' : '🔒 Prywatna' %></span>
+      </div>
+    </div>
+  </div>
+
+  <% if (list.movies.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-state-icon">🎬</div>
+      <h3>Lista jest pusta</h3>
+    </div>
+  <% } else { %>
+  <div class="search-results-grid" style="margin-top: 32px;">
+    <% list.movies.forEach((m, i) => { %>
+    <a href="/movies/details?movieId=<%= m.movieId %>" class="search-movie-card">
+      <% if (m.posterPath) { %>
+        <img src="https://image.tmdb.org/t/p/w300<%= m.posterPath %>" alt="<%= m.movieTitle %>" loading="lazy" />
+      <% } else { %>
+        <div class="search-no-poster">🎬</div>
+      <% } %>
+      <div class="search-card-info">
+        <span class="list-item-num">#<%= i + 1 %></span>
+        <h3><%= m.movieTitle %></h3>
+      </div>
+    </a>
+    <% }) %>
+  </div>
+  <% } %>
+</div>

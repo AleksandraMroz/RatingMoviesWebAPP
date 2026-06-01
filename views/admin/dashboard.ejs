@@ -73,6 +73,7 @@
   <button class="tab-btn" data-tab="watched">Obejrzane (<%= watchedCount %>)</button>
   <button class="tab-btn" data-tab="watchlist">Do obejrzenia (<%= watchlistCount %>)</button>
   <button class="tab-btn" data-tab="favourites">Ulubione (<%= favouritesCount %>)</button>
+  <button class="tab-btn" data-tab="lists">📋 Moje listy</button>
 </div>
 
 <!-- Dashboard D3.js -->
@@ -277,6 +278,31 @@
     <% }) %>
   </div>
   <% } %>
+</div>
+
+<!-- Moje listy -->
+<div class="tab-content" id="tab-lists">
+  <div class="lists-toolbar">
+    <button class="btn" id="create-list-btn">+ Nowa lista</button>
+  </div>
+
+  <!-- Formularz nowej listy -->
+  <div id="create-list-form" class="create-list-form" style="display:none">
+    <input type="text" id="list-name-input" placeholder="Nazwa listy (np. Top 10 horrorów)" maxlength="80" />
+    <textarea id="list-desc-input" placeholder="Opis (opcjonalnie)" rows="2"></textarea>
+    <label class="list-public-toggle">
+      <input type="checkbox" id="list-public-check" checked />
+      <span>Lista publiczna (widoczna na profilu)</span>
+    </label>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" id="save-list-btn">Zapisz listę</button>
+      <button class="btn btn-ghost" id="cancel-list-btn">Anuluj</button>
+    </div>
+  </div>
+
+  <div id="lists-container" class="lists-container">
+    <p class="lists-loading">Ładowanie list...</p>
+  </div>
 </div>
 
 <script type="text/javascript" defer src="/js/dashboard.js"></script>

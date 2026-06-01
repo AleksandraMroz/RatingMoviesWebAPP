@@ -1,3 +1,11 @@
+<!-- Toast po ocenieniu -->
+<% if (locals.rated) { %>
+<div class="rating-toast" id="rating-toast">
+  ✅ Ocena została zapisana!
+  <button onclick="document.getElementById('rating-toast').remove()">×</button>
+</div>
+<% } %>
+
 <div class="movie-info">
   <div class="movie-details">
     <img
@@ -13,32 +21,51 @@
       <% if (movie.runtime) { %> &bull; <%= movie.runtime %> min <% } %>
     </p>
 
-    <!-- Przyciski statusu listy -->
+    <!-- Przyciski statusu — watched/watchlist wzajemnie się wykluczają, ulubione niezależne -->
     <div class="watch-status-buttons" data-movie-id="<%= movieId %>">
-      <button class="status-btn" data-status="watched">
+      <button class="status-btn" data-status="watched" id="btn-watched">
         ✓ Obejrzane
       </button>
-      <button class="status-btn" data-status="watchlist">
+      <button class="status-btn" data-status="watchlist" id="btn-watchlist">
         ⏱ Do obejrzenia
       </button>
-      <button class="status-btn" data-status="favourite">
+      <button class="status-btn status-btn-fav" data-status="favourite" id="btn-favourite">
         ♥ Ulubione
       </button>
     </div>
 
+    <!-- Przycisk Dodaj do listy -->
+    <button class="btn btn-ghost btn-add-to-list" id="btn-add-to-list">📋 Dodaj do listy</button>
+
     <!-- Formularz oceny -->
     <form action="/add-rating" method="POST" class="rating-form">
       <input type="hidden" name="movieId" value="<%= movieId %>" />
-      <label for="rating">Twoja ocena (1–5):</label>
-      <select name="rating" id="rating">
+      <label for="rating">Twoja ocena (1–5 gwiazdek):</label>
+      <div class="star-picker" id="star-picker">
         <% for (let i = 1; i <= 5; i++) { %>
-        <option value="<%= i %>" <%= existingReview && existingReview.rating === i ? 'selected' : '' %>><%= i %></option>
+        <span class="star-pick" data-val="<%= i %>">★</span>
         <% } %>
-      </select>
-      <label for="comment">Komentarz:</label>
-      <textarea name="comment" id="comment"><%= existingReview ? existingReview.comment : '' %></textarea>
+        <input type="hidden" name="rating" id="rating-hidden" value="<%= existingReview && existingReview.rating ? existingReview.rating : 1 %>" />
+      </div>
+      <label for="comment">Komentarz (opcjonalnie):</label>
+      <textarea name="comment" id="comment" rows="3" placeholder="Twoja opinia..."><%= existingReview ? existingReview.comment : '' %></textarea>
       <button type="submit" class="btn">Zapisz ocenę</button>
     </form>
+  </div>
+</div>
+
+<!-- Modal: Dodaj do listy -->
+<div id="list-modal" class="modal" style="display:none">
+  <div class="modal-content">
+    <span class="close" id="close-list-modal">&times;</span>
+    <h2>📋 Dodaj do listy</h2>
+    <div id="list-modal-body">Ładowanie list...</div>
+    <hr style="margin:16px 0;border-color:var(--gray-light)"/>
+    <div class="list-quick-create">
+      <h4>Utwórz nową listę</h4>
+      <input type="text" id="quick-list-name" placeholder="Nazwa listy" maxlength="80" />
+      <button class="btn" id="quick-create-list-btn">Utwórz i dodaj</button>
+    </div>
   </div>
 </div>
 
@@ -72,7 +99,9 @@
             <div class="avatar-placeholder"><%= r.user ? r.user.username[0].toUpperCase() : '?' %></div>
           <% } %>
         </div>
-        <strong><%= r.user ? r.user.username : 'Użytkownik' %></strong>
+        <a href="/profile/<%= r.user ? r.user.username : '#' %>" style="font-weight:700;color:inherit;text-decoration:none;">
+          <%= r.user ? r.user.username : 'Użytkownik' %>
+        </a>
       </div>
       <div class="reviewer-rating">
         <span class="stars"><%- '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) %></span>
@@ -89,36 +118,141 @@
 
 <script>
 const movieId = "<%= movieId %>";
+const movieTitle = "<%= movie.title.replace(/"/g, '&quot;') %>";
+const posterPath = "<%= movie.poster_path || '' %>";
 
-// Pobierz aktualny status przy załadowaniu
+// === Star picker ===
+const stars = document.querySelectorAll(".star-pick");
+const ratingHidden = document.getElementById("rating-hidden");
+let currentRating = Number(ratingHidden.value) || 1;
+
+function renderStars(val) {
+  stars.forEach(s => s.classList.toggle("active", Number(s.dataset.val) <= val));
+}
+renderStars(currentRating);
+
+stars.forEach(s => {
+  s.addEventListener("mouseenter", () => renderStars(Number(s.dataset.val)));
+  s.addEventListener("mouseleave", () => renderStars(currentRating));
+  s.addEventListener("click", () => {
+    currentRating = Number(s.dataset.val);
+    ratingHidden.value = currentRating;
+    renderStars(currentRating);
+  });
+});
+
+// === Status buttons ===
+const btnWatched = document.getElementById("btn-watched");
+const btnWatchlist = document.getElementById("btn-watchlist");
+const btnFav = document.getElementById("btn-favourite");
+
 fetch(`/my-status/${movieId}`)
   .then(r => r.json())
   .then(data => {
-    if (data.watchStatus) {
-      document.querySelectorAll('.status-btn').forEach(btn => {
-        if (btn.dataset.status === data.watchStatus) btn.classList.add('active');
-      });
-    }
+    if (data.watchStatus === "watched") btnWatched.classList.add("active");
+    if (data.watchStatus === "watchlist") btnWatchlist.classList.add("active");
+    if (data.isFavourite) btnFav.classList.add("active");
   })
   .catch(() => {});
 
-// Obsługa kliknięcia statusu
-document.querySelectorAll('.status-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const status = btn.dataset.status;
-    fetch('/set-watch-status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ movieId, status }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-        }
-      })
-      .catch(err => console.error(err));
+async function setStatus(status) {
+  const res = await fetch("/set-watch-status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ movieId, status }),
+  });
+  return res.json();
+}
+
+// watched/watchlist wzajemnie się wykluczają — toggle
+[btnWatched, btnWatchlist].forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const isActive = btn.classList.contains("active");
+    const status = isActive ? null : btn.dataset.status;
+    await setStatus(status);
+    btnWatched.classList.remove("active");
+    btnWatchlist.classList.remove("active");
+    if (!isActive) btn.classList.add("active");
   });
 });
+
+// Ulubione — niezależny toggle
+btnFav.addEventListener("click", async () => {
+  const isActive = btnFav.classList.contains("active");
+  await setStatus(isActive ? "unfavourite" : "favourite");
+  btnFav.classList.toggle("active");
+});
+
+// === Dodaj do listy — modal ===
+const listModal = document.getElementById("list-modal");
+document.getElementById("close-list-modal").onclick = () => listModal.style.display = "none";
+window.addEventListener("click", e => { if (e.target === listModal) listModal.style.display = "none"; });
+
+document.getElementById("btn-add-to-list").addEventListener("click", async () => {
+  listModal.style.display = "block";
+  const body = document.getElementById("list-modal-body");
+  body.innerHTML = "Ładowanie...";
+  try {
+    const res = await fetch("/lists");
+    const lists = await res.json();
+    if (!lists.length) {
+      body.innerHTML = "<p style='color:var(--gray)'>Nie masz jeszcze żadnych list. Utwórz pierwszą poniżej!</p>";
+      return;
+    }
+    body.innerHTML = lists.map(l => `
+      <div class="list-modal-item">
+        <div>
+          <strong>${l.name}</strong>
+          <span style="color:var(--gray);font-size:0.8rem;margin-left:8px">${l.movies.length} filmów</span>
+        </div>
+        <button class="btn btn-sm add-to-list-btn" data-list-id="${l._id}"
+          ${l.movies.some(m => m.movieId === movieId) ? 'disabled' : ''}>
+          ${l.movies.some(m => m.movieId === movieId) ? '✓ Dodano' : '+ Dodaj'}
+        </button>
+      </div>`).join("");
+
+    body.querySelectorAll(".add-to-list-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const listId = btn.dataset.listId;
+        await fetch(`/lists/${listId}/add`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ movieId, movieTitle, posterPath }),
+        });
+        btn.textContent = "✓ Dodano";
+        btn.disabled = true;
+      });
+    });
+  } catch {
+    body.innerHTML = "<p>Błąd ładowania list.</p>";
+  }
+});
+
+// Szybkie tworzenie listy z modalu
+document.getElementById("quick-create-list-btn").addEventListener("click", async () => {
+  const name = document.getElementById("quick-list-name").value.trim();
+  if (!name) return;
+  const createRes = await fetch("/lists", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, isPublic: true }),
+  });
+  const { list } = await createRes.json();
+  await fetch(`/lists/${list._id}/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ movieId, movieTitle, posterPath }),
+  });
+  listModal.style.display = "none";
+  // Pokaż krótki toast
+  const t = document.createElement("div");
+  t.className = "rating-toast";
+  t.textContent = `✅ Dodano do listy "${name}"`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+});
+
+// Auto-ukryj toast po 4s
+const toast = document.getElementById("rating-toast");
+if (toast) setTimeout(() => toast.classList.add("toast-hide"), 4000);
 </script>

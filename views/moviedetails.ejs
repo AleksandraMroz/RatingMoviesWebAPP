@@ -1,3 +1,11 @@
+<% if (locals.rated) { %>
+<div class="rating-toast" id="rating-toast">
+  ✅ Ocena została zapisana!
+  <button onclick="document.getElementById('rating-toast').remove()">×</button>
+</div>
+<script>setTimeout(()=>{const t=document.getElementById('rating-toast');if(t)t.classList.add('toast-hide');},4000);</script>
+<% } %>
+
 <div class="movie-details-page">
   <div class="movie-info">
     <div class="movie-details">

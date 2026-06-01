@@ -115,22 +115,21 @@ router.post("/add-rating", authMiddleware, async (req, res) => {
     await Review.findOneAndUpdate(
       { userId, movieId },
       {
-        userId,
-        movieId,
-        movieTitle: movie.title,
-        posterPath: movie.poster_path,
-        runtime: movie.runtime,
-        rating: Number(rating),
-        comment,
+        $set: {
+          userId,
+          movieId,
+          movieTitle: movie.title,
+          posterPath: movie.poster_path,
+          runtime: movie.runtime,
+          rating: Number(rating),
+          comment,
+        },
       },
       { upsert: true, new: true }
     );
 
-    res.render("ratingSuccess", {
-      title: "Ocena dodana",
-      message: "Ocena została pomyślnie dodana!",
-      currentRoute: "/movies",
-    });
+    // Redirect na szczegóły filmu z flagą sukcesu
+    res.redirect(`/movies/details?movieId=${movieId}&rated=1`);
   } catch (error) {
     console.error("Error adding rating:", error);
     res.status(500).send("Error adding rating.");
@@ -138,7 +137,9 @@ router.post("/add-rating", authMiddleware, async (req, res) => {
 });
 
 /**
- * POST /set-watch-status - Ustaw status listy (watched/watchlist/favourite)
+ * POST /set-watch-status - Ustaw status (watched/watchlist) lub ulubione (isFavourite)
+ * watched i watchlist wzajemnie się wykluczają.
+ * isFavourite jest niezależne i może być łączone z watched.
  */
 router.post("/set-watch-status", authMiddleware, async (req, res) => {
   const { movieId, status } = req.body;
@@ -150,22 +151,35 @@ router.post("/set-watch-status", authMiddleware, async (req, res) => {
     );
     const movie = movieResponse.data;
 
-    const updateData = {
+    const baseData = {
       userId,
       movieId,
       movieTitle: movie.title,
       posterPath: movie.poster_path,
       runtime: movie.runtime,
-      watchStatus: status,
     };
 
-    if (status === "watched") {
-      updateData.watchedDate = new Date();
+    let setData = { ...baseData };
+    let unsetData = {};
+
+    if (status === "favourite" || status === "unfavourite") {
+      // Toggle ulubionych — nie zmienia watchStatus
+      setData.isFavourite = status === "favourite";
+    } else if (status === null || status === "none") {
+      // Usuń watchStatus
+      setData.isFavourite = false;
+      unsetData.watchStatus = 1;
+    } else {
+      // watched lub watchlist — wzajemnie wykluczające
+      setData.watchStatus = status;
+      if (status === "watched") {
+        setData.watchedDate = new Date();
+      }
     }
 
     await Review.findOneAndUpdate(
       { userId, movieId },
-      updateData,
+      { $set: setData, ...(Object.keys(unsetData).length ? { $unset: unsetData } : {}) },
       { upsert: true, new: true }
     );
 
@@ -202,6 +216,7 @@ router.get("/my-status/:movieId", authMiddleware, async (req, res) => {
     const review = await Review.findOne({ userId, movieId });
     res.json({
       watchStatus: review ? review.watchStatus : null,
+      isFavourite: review ? !!review.isFavourite : false,
       rating: review ? review.rating : null,
     });
   } catch (error) {
@@ -258,7 +273,7 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
 
     const watched = reviews.filter(r => r.watchStatus === "watched");
     const watchlist = reviews.filter(r => r.watchStatus === "watchlist");
-    const favourites = reviews.filter(r => r.watchStatus === "favourite");
+    const favourites = reviews.filter(r => r.isFavourite);
     const rated = reviews.filter(r => r.rating != null);
 
     const [totalWatchHistory, followingCount, followersCount, lists] = await Promise.all([
@@ -680,6 +695,45 @@ router.delete("/lists/:listId", authMiddleware, async (req, res) => {
 });
 
 /**
+ * DELETE /lists/:listId/movies/:movieId - Usuń film z listy
+ */
+router.delete("/lists/:listId/movies/:movieId", authMiddleware, async (req, res) => {
+  try {
+    const list = await List.findOne({ _id: req.params.listId, userId: req.userId });
+    if (!list) return res.status(404).json({ error: "Lista nie istnieje" });
+    list.movies = list.movies.filter(m => m.movieId !== req.params.movieId);
+    await list.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /list/:listId - Publiczna strona listy
+ */
+router.get("/list/:listId", async (req, res) => {
+  try {
+    const list = await List.findById(req.params.listId).populate("userId", "username avatarUrl");
+    if (!list) return res.status(404).send("Lista nie istnieje");
+    if (!list.isPublic) {
+      // Sprawdź czy właściciel jest zalogowany
+      const token = req.cookies.token;
+      let ownerId = null;
+      if (token) {
+        try { ownerId = jwt.verify(token, jwtSecret).userId; } catch {}
+      }
+      if (!ownerId || ownerId !== list.userId._id.toString()) {
+        return res.status(403).send("Ta lista jest prywatna");
+      }
+    }
+    res.render("list-public", { list, currentRoute: "/list" });
+  } catch (error) {
+    res.status(500).send("Błąd serwera");
+  }
+});
+
+/**
  * POST /upload-avatar
  */
 router.post("/upload-avatar", authMiddleware, avatarUpload.single("avatar"), async (req, res) => {
@@ -705,7 +759,7 @@ router.get("/profile/:username", async (req, res) => {
     const reviews = await Review.find({ userId: user._id });
     const watched = reviews.filter(r => r.watchStatus === "watched");
     const watchlist = reviews.filter(r => r.watchStatus === "watchlist");
-    const favourites = reviews.filter(r => r.watchStatus === "favourite");
+    const favourites = reviews.filter(r => r.isFavourite);
     const rated = reviews.filter(r => r.rating != null);
 
     const [followersCount, followingCount, publicLists, profileWatchHistory, profileLists] = await Promise.all([
