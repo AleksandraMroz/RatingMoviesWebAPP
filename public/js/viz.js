@@ -274,13 +274,15 @@ const VIZ = {
     if (!el) return;
 
     const w = el.offsetWidth || 340;
-    const h = 220;
+    const card = el.closest(".viz-card");
+    const titleH = card ? (card.querySelector(".viz-title")?.offsetHeight || 36) + 16 + 20 : 72;
+    const h = card ? Math.max(card.offsetHeight - titleH, 220) : 220;
     const m = { top: 16, right: 16, bottom: 36, left: 40 };
     const iW = w - m.left - m.right;
     const iH = h - m.top - m.bottom;
 
     const svg = d3.select("#chart-watchtime").append("svg")
-      .attr("viewBox", `0 0 ${w} ${h}`).attr("width", "100%");
+      .attr("viewBox", `0 0 ${w} ${h}`).attr("width", "100%").attr("height", h);
     const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
 
     const x = d3.scaleBand().domain(data.map(d => d.month)).range([0, iW])
