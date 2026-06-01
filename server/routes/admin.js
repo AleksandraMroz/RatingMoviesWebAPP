@@ -38,6 +38,8 @@ const authMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, jwtSecret);
     req.userId = decoded.userId;
+    // Aktualizuj lastActiveAt (bez blokowania requesta)
+    User.findByIdAndUpdate(req.userId, { lastActiveAt: new Date() }).catch(() => {});
     next();
   } catch (error) {
     res.status(401).json({ message: "Unauthorized" });
@@ -347,6 +349,118 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Error resetting password:", error);
     res.redirect("/dashboard?error=reset");
+  }
+});
+
+/**
+ * GET /following - Strona obserwowanych użytkowników
+ */
+router.get("/following", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Pobierz listę obserwowanych
+    const follows = await Follow.find({ followerId: userId }).populate("followingId");
+    const followingUsers = follows.map(f => f.followingId).filter(Boolean);
+
+    // Dla każdego obserwowanego zbierz statystyki
+    const usersWithStats = await Promise.all(followingUsers.map(async (user) => {
+      const [watchHistory, recentRatings, followersCount] = await Promise.all([
+        WatchHistory.find({ userId: user._id }),
+        Review.find({ userId: user._id, rating: { $exists: true, $ne: null } })
+          .sort({ createdAt: -1 })
+          .limit(3),
+        Follow.countDocuments({ followingId: user._id }),
+      ]);
+
+      const totalMinutes = watchHistory.reduce((sum, w) => sum + (w.runtime || 0), 0);
+      const totalHours = Math.floor(totalMinutes / 60);
+      const remainingMinutes = totalMinutes % 60;
+
+      return {
+        _id: user._id,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        lastActiveAt: user.lastActiveAt,
+        totalMinutes,
+        totalHours,
+        remainingMinutes,
+        watchedCount: watchHistory.length,
+        followersCount,
+        recentRatings,
+      };
+    }));
+
+    res.render("following", {
+      users: usersWithStats,
+      currentRoute: "/following",
+      isLoggedIn: true,
+    });
+  } catch (error) {
+    console.error("Error fetching following:", error);
+    res.status(500).send("Błąd serwera");
+  }
+});
+
+/**
+ * GET /discover - Odkryj użytkowników (ranking aktywności)
+ */
+router.get("/discover", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Wszyscy użytkownicy poza zalogowanym
+    const allUsers = await User.find({ _id: { $ne: userId } });
+
+    // Pobierz follows zalogowanego (żeby wiedzieć kogo już obserwuje)
+    const myFollows = await Follow.find({ followerId: userId });
+    const followingIds = new Set(myFollows.map(f => f.followingId.toString()));
+
+    const usersWithStats = await Promise.all(allUsers.map(async (user) => {
+      const [watchHistory, followersCount, reviewsCount] = await Promise.all([
+        WatchHistory.find({ userId: user._id }),
+        Follow.countDocuments({ followingId: user._id }),
+        Review.countDocuments({ userId: user._id, rating: { $exists: true, $ne: null } }),
+      ]);
+
+      const totalMinutes = watchHistory.reduce((sum, w) => sum + (w.runtime || 0), 0);
+      const totalHours = Math.floor(totalMinutes / 60);
+
+      // Zbierz gatunki
+      const genreMap = {};
+      watchHistory.forEach(w => {
+        (w.genres || []).forEach(g => {
+          genreMap[g.name] = (genreMap[g.name] || 0) + 1;
+        });
+      });
+      const topGenre = Object.entries(genreMap).sort((a, b) => b[1] - a[1])[0];
+
+      return {
+        _id: user._id,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        lastActiveAt: user.lastActiveAt,
+        totalMinutes,
+        totalHours,
+        watchedCount: watchHistory.length,
+        reviewsCount,
+        followersCount,
+        topGenre: topGenre ? topGenre[0] : null,
+        isFollowing: followingIds.has(user._id.toString()),
+      };
+    }));
+
+    // Sortuj wg łącznego czasu oglądania
+    usersWithStats.sort((a, b) => b.totalMinutes - a.totalMinutes);
+
+    res.render("discover", {
+      users: usersWithStats,
+      currentRoute: "/discover",
+      isLoggedIn: true,
+    });
+  } catch (error) {
+    console.error("Error fetching discover:", error);
+    res.status(500).send("Błąd serwera");
   }
 });
 

@@ -1113,6 +1113,348 @@ img {
   padding: 32px 0;
 }
 
+/* ===== PAGE HEADER ===== */
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.8rem;
+}
+
+.page-subtitle {
+  color: var(--gray);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--gray);
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 1.3rem;
+  color: var(--black);
+  margin: 0 0 8px;
+}
+
+.empty-state a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ===== FOLLOWING PAGE ===== */
+.following-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.following-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--gray-light);
+  border-radius: var(--border-radius);
+  padding: 20px 24px;
+  transition: box-shadow 0.2s;
+}
+
+.following-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.following-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.following-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.following-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.following-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.following-username {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--black);
+  text-decoration: none;
+}
+
+.following-username:hover {
+  color: var(--accent);
+}
+
+.last-active,
+.followers-count {
+  font-size: 0.8rem;
+  color: var(--gray);
+}
+
+.unfollow-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--gray-light);
+  border-radius: 20px;
+  background: none;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.82rem;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.unfollow-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.following-stats {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--gray-light);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.following-stat {
+  flex: 1;
+  text-align: center;
+  padding: 12px 8px;
+  border-right: 1px solid var(--gray-light);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.following-stat:last-child {
+  border-right: none;
+}
+
+.following-stat .stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.following-stat .stat-label {
+  font-size: 0.75rem;
+  color: var(--gray);
+}
+
+.following-recent-label {
+  font-size: 0.82rem;
+  color: var(--gray);
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.following-posters {
+  display: flex;
+  gap: 8px;
+}
+
+.following-poster-wrap {
+  position: relative;
+  display: block;
+  text-decoration: none;
+}
+
+.following-poster-wrap img {
+  width: 52px;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+.poster-placeholder {
+  width: 52px;
+  height: 78px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+}
+
+.poster-rating {
+  position: absolute;
+  bottom: 3px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.6rem;
+  color: #f5c518;
+  background: rgba(0,0,0,0.6);
+  border-radius: 0 0 6px 6px;
+  padding: 1px 0;
+}
+
+/* ===== DISCOVER PAGE ===== */
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.discover-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--gray-light);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.discover-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.rank-badge {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gray);
+}
+
+.discover-card-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.discover-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.discover-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.discover-username {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--black);
+  text-decoration: none;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.discover-username:hover {
+  color: var(--accent);
+}
+
+.top-genre-badge {
+  font-size: 0.78rem;
+  color: var(--gray);
+}
+
+.discover-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid var(--gray-light);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.discover-stat {
+  text-align: center;
+  padding: 10px 4px;
+  border-right: 1px solid var(--gray-light);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.discover-stat:last-child {
+  border-right: none;
+}
+
+.discover-stat .stat-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.discover-stat .stat-label {
+  font-size: 0.68rem;
+  color: var(--gray);
+}
+
+.follow-toggle-btn {
+  width: 100%;
+  padding: 9px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.follow-toggle-btn.following {
+  background: transparent;
+  color: var(--gray);
+  border-color: var(--gray-light);
+}
+
+.follow-toggle-btn:hover {
+  filter: brightness(1.1);
+}
+
 /* ===== RESPONSIVE ===== */
 @media only screen and (max-width: 768px) {
   .container {

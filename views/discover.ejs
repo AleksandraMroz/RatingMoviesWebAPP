@@ -1,0 +1,87 @@
+<div class="page-header">
+  <h2>Odkryj użytkowników</h2>
+  <p class="page-subtitle">Ranking aktywności — znajdź kogoś o podobnych gustach</p>
+</div>
+
+<% if (users.length === 0) { %>
+<div class="empty-state">
+  <div class="empty-state-icon">🔍</div>
+  <h3>Brak innych użytkowników</h3>
+  <p>Zaproś znajomych do aplikacji!</p>
+</div>
+<% } else { %>
+<div class="discover-grid">
+  <% users.forEach((user, index) => { %>
+  <div class="discover-card">
+    <!-- Pozycja rankingowa -->
+    <div class="rank-badge rank-<%= index + 1 %>">
+      <% if (index === 0) { %>#🥇<% } else if (index === 1) { %>#🥈<% } else if (index === 2) { %>#🥉<% } else { %>#<%= index + 1 %><% } %>
+    </div>
+
+    <!-- Profil -->
+    <div class="discover-card-top">
+      <a href="/profile/<%= user.username %>" class="discover-avatar-link">
+        <div class="discover-avatar">
+          <% if (user.avatarUrl) { %>
+            <img src="<%= user.avatarUrl %>" alt="<%= user.username %>" />
+          <% } else { %>
+            <div class="avatar-placeholder-large"><%= user.username[0].toUpperCase() %></div>
+          <% } %>
+        </div>
+      </a>
+      <div>
+        <a href="/profile/<%= user.username %>" class="discover-username"><%= user.username %></a>
+        <% if (user.topGenre) { %>
+        <div class="top-genre-badge">❤️ <%= user.topGenre %></div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Statystyki -->
+    <div class="discover-stats">
+      <div class="discover-stat">
+        <span class="stat-value"><%= user.totalHours %>h</span>
+        <span class="stat-label">obejrzane</span>
+      </div>
+      <div class="discover-stat">
+        <span class="stat-value"><%= user.watchedCount %></span>
+        <span class="stat-label">filmów</span>
+      </div>
+      <div class="discover-stat">
+        <span class="stat-value"><%= user.reviewsCount %></span>
+        <span class="stat-label">ocen</span>
+      </div>
+      <div class="discover-stat">
+        <span class="stat-value"><%= user.followersCount %></span>
+        <span class="stat-label">obserwujących</span>
+      </div>
+    </div>
+
+    <!-- Akcja -->
+    <button
+      class="follow-toggle-btn <%= user.isFollowing ? 'following' : '' %>"
+      data-user-id="<%= user._id %>"
+    >
+      <%= user.isFollowing ? '✓ Obserwujesz' : '+ Obserwuj' %>
+    </button>
+  </div>
+  <% }) %>
+</div>
+<% } %>
+
+<script>
+document.querySelectorAll('.follow-toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const userId = btn.dataset.userId;
+    const isFollowing = btn.classList.contains('following');
+    fetch(`/follow/${userId}`, { method: isFollowing ? 'DELETE' : 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          btn.classList.toggle('following');
+          btn.textContent = isFollowing ? '+ Obserwuj' : '✓ Obserwujesz';
+        }
+      });
+  });
+});
+</script>

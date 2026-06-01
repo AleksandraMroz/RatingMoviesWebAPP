@@ -1,0 +1,111 @@
+<div class="page-header">
+  <h2>Obserwowane</h2>
+  <p class="page-subtitle">Aktywność osób, które obserwujesz</p>
+</div>
+
+<% if (users.length === 0) { %>
+<div class="empty-state">
+  <div class="empty-state-icon">👥</div>
+  <h3>Nie obserwujesz nikogo</h3>
+  <p>Przejdź do <a href="/discover">Odkryj</a>, żeby znaleźć innych użytkowników.</p>
+</div>
+<% } else { %>
+<div class="following-grid">
+  <% users.forEach(user => { %>
+  <div class="following-card">
+    <!-- Nagłówek karty -->
+    <div class="following-card-header">
+      <a href="/profile/<%= user.username %>" class="following-avatar-link">
+        <div class="following-avatar">
+          <% if (user.avatarUrl) { %>
+            <img src="<%= user.avatarUrl %>" alt="<%= user.username %>" />
+          <% } else { %>
+            <div class="avatar-placeholder"><%= user.username[0].toUpperCase() %></div>
+          <% } %>
+        </div>
+      </a>
+      <div class="following-user-info">
+        <a href="/profile/<%= user.username %>" class="following-username"><%= user.username %></a>
+        <% if (user.lastActiveAt) { %>
+        <span class="last-active">
+          aktywny/a <%= timeSince(user.lastActiveAt) %>
+        </span>
+        <% } %>
+        <span class="followers-count">👥 <%= user.followersCount %> obserwujących</span>
+      </div>
+      <button class="unfollow-btn" data-user-id="<%= user._id %>">Unfollow</button>
+    </div>
+
+    <!-- Statystyki -->
+    <div class="following-stats">
+      <div class="following-stat">
+        <span class="stat-value"><%= user.totalHours %>h <%= user.remainingMinutes %>min</span>
+        <span class="stat-label">łączny czas</span>
+      </div>
+      <div class="following-stat">
+        <span class="stat-value"><%= user.watchedCount %></span>
+        <span class="stat-label">obejrzanych</span>
+      </div>
+      <div class="following-stat">
+        <span class="stat-value"><%= user.recentRatings.length > 0 ? user.recentRatings[0].rating + '/5' : '—' %></span>
+        <span class="stat-label">ostatnia ocena</span>
+      </div>
+    </div>
+
+    <!-- Ostatnie 3 ocenione filmy -->
+    <% if (user.recentRatings.length > 0) { %>
+    <div class="following-recent">
+      <p class="following-recent-label">Ostatnio ocenione:</p>
+      <div class="following-posters">
+        <% user.recentRatings.forEach(r => { %>
+        <a href="/movies/details?movieId=<%= r.movieId %>" class="following-poster-wrap" title="<%= r.movieTitle %>">
+          <% if (r.posterPath) { %>
+            <img src="https://image.tmdb.org/t/p/w92<%= r.posterPath %>" alt="<%= r.movieTitle %>" />
+          <% } else { %>
+            <div class="poster-placeholder"><%= r.movieTitle ? r.movieTitle[0] : '?' %></div>
+          <% } %>
+          <span class="poster-rating"><%- '★'.repeat(r.rating) %></span>
+        </a>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+  </div>
+  <% }) %>
+</div>
+<% } %>
+
+<script>
+function timeSince(date) {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  if (seconds < 60) return "przed chwilą";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min temu`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h temu`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} dni temu`;
+  return new Date(date).toLocaleDateString('pl-PL');
+}
+
+// Zaktualizuj czasy "aktywny/a X temu"
+document.querySelectorAll('.last-active[data-date]').forEach(el => {
+  el.textContent = 'aktywny/a ' + timeSince(el.dataset.date);
+});
+
+// Unfollow
+document.querySelectorAll('.unfollow-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const userId = btn.dataset.userId;
+    fetch(`/follow/${userId}`, { method: 'DELETE' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          btn.closest('.following-card').style.opacity = '0.4';
+          btn.textContent = 'Odpięto';
+          btn.disabled = true;
+        }
+      });
+  });
+});
+</script>
