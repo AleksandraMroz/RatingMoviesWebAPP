@@ -34,11 +34,12 @@
     </div>
   </div>
 
-  <!-- Osiągnięcia -->
-  <% if (locals.achievements && achievements.length) { %>
+  <!-- Osiągnięcia — tylko odblokowane -->
+  <% const profileUnlocked = locals.achievements ? achievements.filter(a => a.unlocked) : []; %>
+  <% if (profileUnlocked.length) { %>
   <div class="achievements-row">
-    <% achievements.forEach(a => { %>
-    <div class="achievement-chip <%= a.unlocked ? 'unlocked' : 'locked' %>" title="<%= a.desc %>">
+    <% profileUnlocked.forEach(a => { %>
+    <div class="achievement-chip unlocked" title="<%= a.desc %>">
       <span class="achievement-icon"><%= a.icon %></span>
       <span class="achievement-name"><%= a.name %></span>
     </div>

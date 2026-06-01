@@ -62,19 +62,32 @@
 
 <!-- Osiągnięcia -->
 <% if (locals.achievements && achievements.length) { %>
+<% const unlockedAch = achievements.filter(a => a.unlocked); const lockedAch = achievements.filter(a => !a.unlocked); %>
 <div class="achievements-bar">
-  <div class="achievements-bar-header" id="ach-toggle" onclick="document.getElementById('ach-chips').classList.toggle('ach-open')">
-    <span>Osiągnięcia (<%= achievements.filter(a=>a.unlocked).length %>/<%= achievements.length %>)</span>
-    <span class="ach-arrow">›</span>
+  <div class="achievements-bar-header">
+    <span>Osiągnięcia (<%= unlockedAch.length %>/<%= achievements.length %>)</span>
   </div>
-  <div class="achievements-chips-scroll" id="ach-chips">
-    <% [...achievements].sort((a,b) => b.unlocked - a.unlocked).forEach(a => { %>
-    <div class="achievement-chip <%= a.unlocked ? 'unlocked' : 'locked' %>" title="<%= a.desc %>">
+  <div class="achievements-chips-scroll ach-open" id="ach-chips-unlocked">
+    <% unlockedAch.forEach(a => { %>
+    <div class="achievement-chip unlocked" title="<%= a.desc %>">
+      <span class="achievement-icon"><%= a.icon %></span>
+      <span class="achievement-name"><%= a.name %></span>
+    </div>
+    <% }) %>
+    <% if (lockedAch.length) { %>
+    <button class="ach-show-all-btn" id="ach-show-all" onclick="document.getElementById('ach-chips-locked').classList.add('ach-open');this.style.display='none'">Pokaż wszystkie →</button>
+    <% } %>
+  </div>
+  <% if (lockedAch.length) { %>
+  <div class="achievements-chips-scroll" id="ach-chips-locked" style="display:none">
+    <% lockedAch.forEach(a => { %>
+    <div class="achievement-chip locked" title="<%= a.desc %>">
       <span class="achievement-icon"><%= a.icon %></span>
       <span class="achievement-name"><%= a.name %></span>
     </div>
     <% }) %>
   </div>
+  <% } %>
 </div>
 <% } %>
 

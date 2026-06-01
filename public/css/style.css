@@ -1146,9 +1146,11 @@ img {
 .ach-arrow { transition: transform 0.2s; font-size: 1.2rem; }
 .achievements-chips-scroll { display: none; flex-wrap: nowrap; gap: 8px; padding: 0 16px 12px; overflow-x: auto; }
 .achievements-chips-scroll.ach-open { display: flex; }
+.ach-show-all-btn { flex-shrink: 0; background: none; border: 1.5px solid var(--gray-light); border-radius: 999px; padding: 6px 14px; font-size: 0.82rem; font-weight: 600; color: var(--gray); cursor: pointer; white-space: nowrap; }
+.ach-show-all-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 .achievement-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
@@ -1157,6 +1159,8 @@ img {
   font-weight: 600;
   cursor: default;
   transition: transform 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .achievement-chip:hover { transform: translateY(-1px); }
