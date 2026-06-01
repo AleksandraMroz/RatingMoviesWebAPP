@@ -35,8 +35,16 @@
       <span class="close" id="close-reset">&times;</span>
       <h2>Resetuj hasło</h2>
       <form id="reset-password-form" action="/reset-password" method="POST">
+        <label for="old-password">Stare hasło:</label>
+        <div class="modal-pwd-wrap">
+          <input type="password" id="old-password" name="oldPassword" required />
+          <button type="button" class="modal-eye-btn" onclick="toggleModalPwd('old-password',this)">👁</button>
+        </div>
         <label for="new-password">Nowe hasło:</label>
-        <input type="password" id="new-password" name="newPassword" required />
+        <div class="modal-pwd-wrap">
+          <input type="password" id="new-password" name="newPassword" required />
+          <button type="button" class="modal-eye-btn" onclick="toggleModalPwd('new-password',this)">👁</button>
+        </div>
         <button type="submit" id="confirm-reset-password" class="btn">Zresetuj hasło</button>
       </form>
     </div>
@@ -130,7 +138,7 @@
     </div>
   </div>
 
-  <div id="viz-empty" style="display:none" class="empty-state">
+  <div id="viz-empty" style="display:none;text-align:center" class="empty-state">
     <div class="empty-state-icon">📊</div>
     <h3>Brak danych do wyświetlenia</h3>
     <p>Oznacz kilka filmów jako obejrzane i oceń je, aby zobaczyć swój dashboard.</p>
@@ -306,3 +314,10 @@
 </div>
 
 <script type="text/javascript" defer src="/js/dashboard.js"></script>
+<script>
+function toggleModalPwd(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'text' ? 'password' : 'text';
+  btn.textContent = el.type === 'text' ? '🙈' : '👁';
+}
+</script>

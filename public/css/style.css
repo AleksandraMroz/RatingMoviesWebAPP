@@ -133,7 +133,7 @@ img {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 32px;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .header__logo {
@@ -175,15 +175,17 @@ img {
   padding: 0;
   margin: 0;
   font-weight: 600;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .header__nav ul a {
-  padding: 8px 14px;
+  padding: 8px 10px;
   text-decoration: none;
   color: var(--nav-text);
   border-radius: 8px;
   transition: background 0.2s, color 0.2s;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .header__nav ul a.active,
@@ -2352,11 +2354,15 @@ img {
   box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
 }
 
+.modal-pwd-wrap { position: relative; margin-bottom: 12px; }
+.modal-pwd-wrap input { width: 100%; padding-right: 40px; }
+.modal-eye-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1rem; padding: 0; }
+
 .auth-password-wrap { position: relative; }
 .auth-password-wrap input { padding-right: 42px; }
 .auth-eye {
   position: absolute;
-  right: 12px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;

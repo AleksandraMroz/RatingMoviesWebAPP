@@ -20,13 +20,15 @@ document.addEventListener("DOMContentLoaded", function () {
       method: "POST",
       body: new URLSearchParams(formData),
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    }).then((response) => {
-      if (response.ok) {
+    }).then((response) => response.json()).then((data) => {
+      if (data.ok) {
         resetPasswordModal.style.display = "none";
-        showDashToast("✅ Hasło zostało zmienione.", "success");
+        showDashToast("Hasło zostało zmienione.", "success");
       } else {
-        showDashToast("❌ Błąd przy zmianie hasła.", "error");
+        showDashToast(data.error || "Błąd przy zmianie hasła.", "error");
       }
+    }).catch(() => {
+      showDashToast("Błąd przy zmianie hasła.", "error");
     });
   });
 

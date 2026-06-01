@@ -15,7 +15,7 @@
   </div>
   <% } else { %>
   <div class="feed-list">
-    <% feed.forEach(item => { %>
+    <% feed.slice(0, 10).forEach(item => { %>
     <div class="feed-item">
       <a href="/profile/<%= item.user.username %>" class="feed-avatar">
         <% if (item.user.avatarUrl) { %>
@@ -48,5 +48,42 @@
     </div>
     <% }) %>
   </div>
+  <% if (feed.length > 10) { %>
+  <div class="feed-list feed-list-more" id="feed-more" style="display:none">
+    <% feed.slice(10).forEach(item => { %>
+    <div class="feed-item">
+      <a href="/profile/<%= item.user.username %>" class="feed-avatar">
+        <% if (item.user.avatarUrl) { %>
+          <img src="<%= item.user.avatarUrl %>" alt="<%= item.user.username %>" />
+        <% } else { %>
+          <div class="avatar-placeholder"><%= item.user.username[0].toUpperCase() %></div>
+        <% } %>
+      </a>
+      <div class="feed-content">
+        <div class="feed-header">
+          <a href="/profile/<%= item.user.username %>" class="feed-username"><%= item.user.username %></a>
+          <% if (item.type === 'rating') { %>
+            <span class="feed-action">ocenił/a</span>
+            <span class="feed-stars"><%- '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating) %></span>
+          <% } else { %>
+            <span class="feed-action">obejrzał/a</span>
+          <% } %>
+          <span class="feed-date"><%= new Date(item.date).toLocaleDateString('pl-PL') %></span>
+        </div>
+        <a href="/movies/details?movieId=<%= item.movieId %>" class="feed-movie">
+          <% if (item.posterPath) { %>
+            <img src="https://image.tmdb.org/t/p/w92<%= item.posterPath %>" alt="<%= item.movieTitle %>" />
+          <% } %>
+          <span><%= item.movieTitle %></span>
+        </a>
+        <% if (item.comment) { %>
+        <p class="feed-comment">"<%= item.comment %>"</p>
+        <% } %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <button class="btn btn-ghost feed-more-btn" id="feed-more-btn" onclick="document.getElementById('feed-more').style.display='block';this.style.display='none'">Pokaż więcej (<%=feed.length-10%>)</button>
+  <% } %>
   <% } %>
 </div>

@@ -412,16 +412,19 @@ router.get("/logout", (req, res) => {
  * POST /reset-password
  */
 router.post("/reset-password", authMiddleware, async (req, res) => {
-  const { newPassword } = req.body;
+  const { oldPassword, newPassword } = req.body;
   const userId = req.userId;
   try {
-    if (!newPassword) throw new Error("New Password is required.");
+    if (!oldPassword || !newPassword) throw new Error("Both passwords required.");
+    const user = await User.findById(userId);
+    const match = await bcrypt.compare(oldPassword, user.password);
+    if (!match) return res.status(400).json({ error: "Stare hasło jest nieprawidłowe." });
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await User.findByIdAndUpdate(userId, { password: hashedPassword });
-    res.redirect("/dashboard?passwordReset=true");
+    res.json({ ok: true });
   } catch (error) {
     console.error("Error resetting password:", error);
-    res.redirect("/dashboard?error=reset");
+    res.status(500).json({ error: "Błąd serwera." });
   }
 });
 
