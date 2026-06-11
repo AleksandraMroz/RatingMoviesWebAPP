@@ -249,7 +249,6 @@ const VIZ = {
       .transition().duration(600).delay((d, i) => i * 60)
       .attr("opacity", 1);
 
-    // Legenda
     const legend = svg.append("g").attr("transform", `translate(${size + 12}, 20)`);
     genreData.forEach((d, i) => {
       const row = legend.append("g").attr("transform", `translate(0, ${i * 26})`);
