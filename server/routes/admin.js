@@ -17,7 +17,6 @@ const Follow = require("../models/Follow");
 const List = require("../models/List");
 const { computeAchievements } = require("../achievements");
 
-// Multer — upload avatarów
 const avatarStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "public/uploads/avatars"),
   filename: (req, file, cb) => {
@@ -51,9 +50,6 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-/**
- * GET /admin - Login Page
- */
 router.get("/admin", async (req, res) => {
   try {
     const locals = {
@@ -66,13 +62,9 @@ router.get("/admin", async (req, res) => {
   }
 });
 
-// /register i /login → alias do /admin (ta sama strona logowania/rejestracji)
 router.get("/register", (req, res) => res.redirect("/admin"));
 router.get("/login", (req, res) => res.redirect("/admin"));
 
-/**
- * POST /admin - Check Login
- */
 router.post("/admin", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -106,9 +98,6 @@ router.post("/admin", async (req, res) => {
   }
 });
 
-/**
- * POST /add-rating - Dodaj lub zaktualizuj ocenę
- */
 router.post("/add-rating", authMiddleware, async (req, res) => {
   const { movieId, rating, comment } = req.body;
   const userId = req.userId;
@@ -142,11 +131,6 @@ router.post("/add-rating", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * POST /set-watch-status - Ustaw status (watched/watchlist) lub ulubione (isFavourite)
- * watched i watchlist wzajemnie się wykluczają.
- * isFavourite jest niezależne i może być łączone z watched.
- */
 router.post("/set-watch-status", authMiddleware, async (req, res) => {
   const { movieId, status } = req.body;
   const userId = req.userId;
@@ -169,14 +153,11 @@ router.post("/set-watch-status", authMiddleware, async (req, res) => {
     let unsetData = {};
 
     if (status === "favourite" || status === "unfavourite") {
-      // Toggle ulubionych — nie zmienia watchStatus
       setData.isFavourite = status === "favourite";
     } else if (status === null || status === "none") {
-      // Usuń watchStatus
       setData.isFavourite = false;
       unsetData.watchStatus = 1;
     } else {
-      // watched lub watchlist — wzajemnie wykluczające
       setData.watchStatus = status;
       if (status === "watched") {
         setData.watchedDate = new Date();
@@ -189,7 +170,6 @@ router.post("/set-watch-status", authMiddleware, async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // Zapisz do WatchHistory gdy oznaczono jako obejrzane
     if (status === "watched") {
       const alreadyLogged = await WatchHistory.findOne({ userId, movieId });
       if (!alreadyLogged) {
@@ -212,9 +192,6 @@ router.post("/set-watch-status", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /my-status/:movieId - Pobierz status danego filmu dla zalogowanego użytkownika
- */
 router.get("/my-status/:movieId", authMiddleware, async (req, res) => {
   const { movieId } = req.params;
   const userId = req.userId;
@@ -230,9 +207,6 @@ router.get("/my-status/:movieId", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /movies/rate
- */
 router.get("/movies/rate", authMiddleware, async (req, res) => {
   const movieId = req.query.movieId;
   try {
@@ -260,9 +234,6 @@ router.get("/movies/rate", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /dashboard
- */
 router.get("/dashboard", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
@@ -345,9 +316,6 @@ router.get("/dashboard", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * POST /register
- */
 router.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -398,18 +366,12 @@ router.post("/register", async (req, res) => {
   }
 });
 
-/**
- * GET /logout
- */
 router.get("/logout", (req, res) => {
   res.clearCookie("token");
   req.session.isLoggedIn = false;
   res.redirect("/");
 });
 
-/**
- * POST /reset-password
- */
 router.post("/reset-password", authMiddleware, async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const userId = req.userId;
@@ -427,9 +389,6 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /api/dashboard-stats - Dane dla D3.js
- */
 router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
@@ -441,7 +400,6 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
 
     const watchedReviews = reviews.filter(r => r.watchStatus === "watched");
 
-    // Jeśli WatchHistory jest puste, buduj dane z Review (fallback)
     const historySource = watchHistory.length > 0 ? watchHistory : watchedReviews.map(r => ({
       runtime: r.runtime || 0,
       watchedAt: r.watchedDate || r.updatedAt || r.createdAt,
@@ -449,28 +407,22 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
       movieId: r.movieId,
     }));
 
-    // 1. Łączny czas
     const totalMinutes = historySource.reduce((sum, w) => sum + (w.runtime || 0), 0);
 
-    // 2. Aktywność dzień po dniu (ostatnie 365 dni)
     const activityMap = {};
-
-    // Aktywność z WatchHistory / obejrzanych
     historySource.forEach(w => {
       const day = new Date(w.watchedAt).toISOString().slice(0, 10);
       activityMap[day] = (activityMap[day] || 0) + 1;
     });
-    // Uzupełnij ocenami (jeśli dany dzień nie istnieje jeszcze)
     reviews.filter(r => r.rating != null).forEach(r => {
       const day = new Date(r.updatedAt || r.createdAt).toISOString().slice(0, 10);
       if (!activityMap[day]) activityMap[day] = 0;
-      activityMap[day] += 0.5; // ocena liczy jako połowa aktywności
+      activityMap[day] += 0.5;
     });
     const activityData = Object.entries(activityMap)
       .map(([date, count]) => ({ date, count: Math.ceil(count) }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // 3. Rozkład gatunków — z WatchHistory lub z pominięciem jeśli puste
     const genreMap = {};
     watchHistory.forEach(w => {
       (w.genres || []).forEach(g => {
@@ -482,7 +434,6 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
-    // 4. Średnia ocena miesięcznie
     const ratingsByMonth = {};
     reviews.filter(r => r.rating != null).forEach(r => {
       const month = new Date(r.updatedAt || r.createdAt).toISOString().slice(0, 7);
@@ -494,7 +445,6 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
       .map(([month, { sum, count }]) => ({ month, avg: +(sum / count).toFixed(2), count }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
-    // 5. Czas oglądania miesięcznie (z historySource)
     const minutesByMonth = {};
     historySource.forEach(w => {
       const month = new Date(w.watchedAt).toISOString().slice(0, 7);
@@ -504,19 +454,16 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
       .map(([month, minutes]) => ({ month, hours: +(minutes / 60).toFixed(1) }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
-    // 6. Rozkład ocen
     const ratingDist = [1, 2, 3, 4, 5].map(star => ({
       star,
       count: reviews.filter(r => r.rating === star).length,
     }));
 
-    // 7. Szacowany czas listy "Do obejrzenia"
     const watchlistRuntime = reviews
       .filter(r => r.watchStatus === "watchlist")
       .reduce((sum, r) => sum + (r.runtime || 90), 0);
 
     const ratedCount = reviews.filter(r => r.rating != null).length;
-    // Liczba obejrzanych = większa z obu źródeł
     const watchedCount = Math.max(watchHistory.length, watchedReviews.length);
 
     res.json({
@@ -538,18 +485,13 @@ router.get("/api/dashboard-stats", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /following - Strona obserwowanych użytkowników
- */
 router.get("/following", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
 
-    // Pobierz listę obserwowanych
     const follows = await Follow.find({ followerId: userId }).populate("followingId");
     const followingUsers = follows.map(f => f.followingId).filter(Boolean);
 
-    // Dla każdego obserwowanego zbierz statystyki
     const usersWithStats = await Promise.all(followingUsers.map(async (user) => {
       const [watchHistory, recentRatings, followersCount] = await Promise.all([
         WatchHistory.find({ userId: user._id }),
@@ -588,9 +530,6 @@ router.get("/following", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /discover - Odkryj użytkowników (ranking aktywności)
- */
 router.get("/discover", async (req, res) => {
   try {
     let userId = null;
@@ -642,7 +581,6 @@ router.get("/discover", async (req, res) => {
       };
     }));
 
-    // Sortuj wg łącznego czasu oglądania
     usersWithStats.sort((a, b) => b.totalMinutes - a.totalMinutes);
 
     res.render("discover", {
@@ -656,9 +594,6 @@ router.get("/discover", async (req, res) => {
   }
 });
 
-/**
- * POST /follow/:userId - Obserwuj użytkownika
- */
 router.post("/follow/:targetId", authMiddleware, async (req, res) => {
   try {
     const followerId = req.userId;
@@ -676,9 +611,6 @@ router.post("/follow/:targetId", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * DELETE /follow/:userId - Przestań obserwować
- */
 router.delete("/follow/:targetId", authMiddleware, async (req, res) => {
   try {
     await Follow.findOneAndDelete({ followerId: req.userId, followingId: req.params.targetId });
@@ -688,9 +620,6 @@ router.delete("/follow/:targetId", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /lists - Listy zalogowanego użytkownika
- */
 router.get("/lists", authMiddleware, async (req, res) => {
   try {
     const lists = await List.find({ userId: req.userId }).sort({ createdAt: -1 });
@@ -700,9 +629,6 @@ router.get("/lists", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * POST /lists - Utwórz nową listę
- */
 router.post("/lists", authMiddleware, async (req, res) => {
   try {
     const { name, description, isPublic } = req.body;
@@ -713,9 +639,6 @@ router.post("/lists", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * POST /lists/:listId/add - Dodaj film do listy
- */
 router.post("/lists/:listId/add", authMiddleware, async (req, res) => {
   try {
     const { movieId, movieTitle, posterPath } = req.body;
@@ -733,9 +656,6 @@ router.post("/lists/:listId/add", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * DELETE /lists/:listId - Usuń listę
- */
 router.delete("/lists/:listId", authMiddleware, async (req, res) => {
   try {
     await List.findOneAndDelete({ _id: req.params.listId, userId: req.userId });
@@ -745,9 +665,6 @@ router.delete("/lists/:listId", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * DELETE /lists/:listId/movies/:movieId - Usuń film z listy
- */
 router.delete("/lists/:listId/movies/:movieId", authMiddleware, async (req, res) => {
   try {
     const list = await List.findOne({ _id: req.params.listId, userId: req.userId });
@@ -760,15 +677,11 @@ router.delete("/lists/:listId/movies/:movieId", authMiddleware, async (req, res)
   }
 });
 
-/**
- * GET /list/:listId - Publiczna strona listy
- */
 router.get("/list/:listId", async (req, res) => {
   try {
     const list = await List.findById(req.params.listId).populate("userId", "username avatarUrl");
     if (!list) return res.status(404).send("Lista nie istnieje");
     if (!list.isPublic) {
-      // Sprawdź czy właściciel jest zalogowany
       const token = req.cookies.token;
       let ownerId = null;
       if (token) {
@@ -784,9 +697,6 @@ router.get("/list/:listId", async (req, res) => {
   }
 });
 
-/**
- * POST /upload-avatar
- */
 router.post("/upload-avatar", authMiddleware, avatarUpload.single("avatar"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: "Brak pliku" });
@@ -799,9 +709,6 @@ router.post("/upload-avatar", authMiddleware, avatarUpload.single("avatar"), asy
   }
 });
 
-/**
- * GET /profile/:username - Publiczny profil użytkownika
- */
 router.get("/profile/:username", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username });
@@ -840,7 +747,6 @@ router.get("/profile/:username", async (req, res) => {
     };
     const achievements = computeAchievements(achievementStats);
 
-    // Sprawdź czy zalogowany użytkownik obserwuje ten profil
     let isFollowing = false;
     let currentUserId = null;
     const token = req.cookies.token;
@@ -880,9 +786,6 @@ router.get("/profile/:username", async (req, res) => {
   }
 });
 
-/**
- * POST /delete-account
- */
 router.post("/delete-account", authMiddleware, async (req, res) => {
   const userId = req.userId;
   try {
@@ -897,15 +800,11 @@ router.post("/delete-account", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /feed — social feed (aktywność obserwowanych)
- */
 router.get("/feed", authMiddleware, async (req, res) => {
   try {
     const follows = await Follow.find({ followerId: req.userId }).select("followingId");
     const followingIds = follows.map(f => f.followingId);
 
-    // Ostatnie oceny + zmiany statusu od obserwowanych (max 40 wpisów łącznie)
     const [recentReviews, recentWatched] = await Promise.all([
       Review.find({
         userId: { $in: followingIds },
@@ -920,7 +819,6 @@ router.get("/feed", authMiddleware, async (req, res) => {
         .limit(25),
     ]);
 
-    // Łącz i sortuj po dacie
     const feed = [
       ...recentReviews.map(r => ({
         type: "rating",
@@ -955,15 +853,11 @@ router.get("/feed", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /api/recommendations — rekomendacje na podstawie gatunków i ocen
- */
 router.get("/api/recommendations", authMiddleware, async (req, res) => {
   try {
     const reviews = await Review.find({ userId: req.userId, rating: { $gte: 4 } });
     const watchHistory = await WatchHistory.find({ userId: req.userId });
 
-    // Zbierz ulubione gatunki (z wysoko ocenionych filmów)
     const genreCount = {};
     watchHistory.forEach(w => {
       if (w.genres) w.genres.forEach(g => {
@@ -982,7 +876,6 @@ router.get("/api/recommendations", authMiddleware, async (req, res) => {
     ]);
 
     if (topGenres.length === 0) {
-      // Fallback: popularne filmy
       const resp = await axios.get(
         `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=pl-PL&page=1`
       );
@@ -992,7 +885,6 @@ router.get("/api/recommendations", authMiddleware, async (req, res) => {
       return res.json({ movies, genres: [] });
     }
 
-    // Pobierz filmy z top gatunków
     const [resp1, resp2] = await Promise.all([
       axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=pl-PL&sort_by=vote_average.desc&vote_count.gte=100&with_genres=${topGenres[0]}&page=1`),
       topGenres[1]
@@ -1007,7 +899,6 @@ router.get("/api/recommendations", authMiddleware, async (req, res) => {
       .filter(m => !seenMovieIds.has(String(m.id)))
       .sort((a, b) => b.vote_average - a.vote_average);
 
-    // Deduplicate
     const seen = new Set();
     const movies = candidates.filter(m => {
       if (seen.has(m.id)) return false;
@@ -1022,15 +913,11 @@ router.get("/api/recommendations", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /api/similar-users — użytkownicy o podobnych gustach
- */
 router.get("/api/similar-users", authMiddleware, async (req, res) => {
   try {
     const myReviews = await Review.find({ userId: req.userId, rating: { $ne: null } });
     const myWatchHistory = await WatchHistory.find({ userId: req.userId });
 
-    // Moje ulubione gatunki
     const myGenres = {};
     myWatchHistory.forEach(w => (w.genres || []).forEach(g => {
       myGenres[g.id] = (myGenres[g.id] || 0) + 1;
@@ -1043,7 +930,6 @@ router.get("/api/similar-users", authMiddleware, async (req, res) => {
       ? myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length
       : 3;
 
-    // Wszyscy inni użytkownicy
     const follows = await Follow.find({ followerId: req.userId }).select("followingId");
     const alreadyFollowing = new Set(follows.map(f => f.followingId.toString()));
 
@@ -1063,12 +949,10 @@ router.get("/api/similar-users", authMiddleware, async (req, res) => {
         Object.entries(uGenres).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => id)
       );
 
-      // Overlap gatunków (Jaccard)
       const intersection = [...myTopGenres].filter(g => uTopGenres.has(g)).length;
       const union = new Set([...myTopGenres, ...uTopGenres]).size;
       const genreScore = union > 0 ? intersection / union : 0;
 
-      // Podobieństwo średniej oceny
       const uAvg = uReviews.length
         ? uReviews.reduce((s, r) => s + r.rating, 0) / uReviews.length
         : 3;
@@ -1098,9 +982,6 @@ router.get("/api/similar-users", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /api/community-stats — statystyki porównawcze
- */
 router.get("/api/community-stats", authMiddleware, async (req, res) => {
   try {
     const [myReviews, allReviews, myWatchHistory, communityWatchHistory] = await Promise.all([
@@ -1117,13 +998,11 @@ router.get("/api/community-stats", authMiddleware, async (req, res) => {
       ? (allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length).toFixed(2)
       : null;
 
-    // Rozkład ocen społeczności
     const communityDist = [1,2,3,4,5].map(n => ({
       rating: n,
       count: allReviews.filter(r => r.rating === n).length,
     }));
 
-    // Moje minuty vs średnia
     const myMinutes = myWatchHistory.reduce((s, w) => s + (w.runtime || 0), 0);
 
     const userMinutesMap = {};
@@ -1135,7 +1014,6 @@ router.get("/api/community-stats", authMiddleware, async (req, res) => {
       ? Math.round(minutesList.reduce((s, m) => s + m, 0) / minutesList.length)
       : 0;
 
-    // Top gatunki społeczności
     const allGenreCounts = {};
     communityWatchHistory.forEach(w => (w.genres || []).forEach(g => {
       allGenreCounts[g.name] = (allGenreCounts[g.name] || 0) + 1;

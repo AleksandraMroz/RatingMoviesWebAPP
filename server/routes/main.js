@@ -32,7 +32,6 @@ const TMDB_GENRES = [
 
 router.get("/", async (req, res) => {
   try {
-    // Pobierz popularne filmy zawsze
     const [trendingRes, topRatedRes] = await Promise.all([
       axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=pl-PL&page=1`),
       axios.get(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=pl-PL&page=1`),
@@ -40,7 +39,6 @@ router.get("/", async (req, res) => {
     const trending = (trendingRes.data.results || []).slice(0, 10);
     const topRated = (topRatedRes.data.results || []).slice(0, 6);
 
-    // Jeśli zalogowany — pobierz dane spersonalizowane
     let userData = null;
     const token = req.cookies.token;
     if (token) {
@@ -59,7 +57,6 @@ router.get("/", async (req, res) => {
         const watchedCount = reviews.filter(r => r.watchStatus === "watched").length;
         const recentActivity = reviews.slice(0, 5);
 
-        // Ostatnio oglądany film
         const lastWatched = watchHistory[0] || null;
 
         userData = {
@@ -133,13 +130,11 @@ router.get("/search", async (req, res) => {
         `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(q)}&language=pl-PL&page=1`
       );
       movies = response.data.results || [];
-      // Filtruj wyniki wyszukiwania po dodatkowych parametrach
       if (genre) movies = movies.filter(m => (m.genre_ids || []).includes(Number(genre)));
       if (year_from) movies = movies.filter(m => m.release_date && m.release_date.slice(0, 4) >= year_from);
       if (year_to) movies = movies.filter(m => m.release_date && m.release_date.slice(0, 4) <= year_to);
       if (vote_min) movies = movies.filter(m => m.vote_average >= Number(vote_min));
     } else {
-      // Discover — filtrowanie bez frazy
       const params = new URLSearchParams({
         api_key: API_KEY,
         language: "pl-PL",
@@ -163,7 +158,6 @@ router.get("/search", async (req, res) => {
   }
 });
 
-// POST /search — stary endpoint (redirect do GET)
 router.post("/search", (req, res) => {
   res.redirect(`/search?q=${encodeURIComponent(req.body.searchTerm || "")}`);
 });
