@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // === Modals ===
   const resetPasswordBtn = document.getElementById("reset-password-btn");
   const deleteAccountBtn = document.getElementById("delete-account-btn");
   const resetPasswordModal = document.getElementById("reset-password-modal");
@@ -72,7 +71,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (event.target == deleteAccountModal) deleteAccountModal.style.display = "none";
   };
 
-  // === Upload avatara ===
   const avatarInput = document.getElementById("avatar-input");
   if (avatarInput) {
     avatarInput.addEventListener("change", () => {
@@ -92,7 +90,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === Zakładki ===
   const tabBtns = document.querySelectorAll(".tab-btn");
   const tabContents = document.querySelectorAll(".tab-content");
   let recommendLoaded = false;
@@ -112,7 +109,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // === Listy ===
   const createListBtn = document.getElementById("create-list-btn");
   const createListForm = document.getElementById("create-list-form");
   const saveListBtn = document.getElementById("save-list-btn");
@@ -192,7 +188,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === Rekomendacje ===
   async function loadRecommendations() {
     recommendLoaded = true;
     const [recRes, simRes] = await Promise.all([
@@ -205,13 +200,11 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector(".recommend-loading").style.display = "none";
     document.getElementById("recommend-content").style.display = "block";
 
-    // Opis gatunków
     const desc = document.getElementById("recommend-desc");
     desc.textContent = rec.movies.length
       ? "Na podstawie Twoich ulubionych gatunków filmowych"
       : "Popularne filmy, których jeszcze nie widziałeś/aś";
 
-    // Siatka filmów
     const grid = document.getElementById("recommend-grid");
     grid.innerHTML = rec.movies.map(m => `
       <a href="/movies/details?movieId=${m.id}" class="rec-movie-card">
@@ -224,7 +217,6 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
       </a>`).join("") || "<p class='empty-tab'>Brak rekomendacji — oceń więcej filmów!</p>";
 
-    // Podobni użytkownicy
     const list = document.getElementById("similar-users-list");
     if (!sim.length) {
       list.innerHTML = "<p class='empty-tab'>Brak podobnych użytkowników — oceń więcej filmów, żeby znaleźć kinomanów o zbliżonym guście!</p>";
@@ -247,7 +239,6 @@ document.addEventListener("DOMContentLoaded", function () {
           : `<span class="following-label">✓ Obserwujesz</span>`}
       </div>`).join("");
 
-    // Przyciski follow
     list.querySelectorAll(".similar-follow-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         const id = btn.dataset.id;
@@ -257,7 +248,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // === Statystyki społeczności ===
   async function loadCommunityStats() {
     communityLoaded = true;
     const res = await fetch("/api/community-stats");
@@ -271,7 +261,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("c-my-hours").textContent = data.myMinutes ? Math.round(data.myMinutes / 60) + "h" : "—";
     document.getElementById("c-avg-hours").textContent = data.avgMinutes ? Math.round(data.avgMinutes / 60) + "h" : "—";
 
-    // D3 — rozkład ocen społeczności
     if (data.communityDist && typeof d3 !== "undefined") {
       const el = document.getElementById("chart-community-dist");
       el.innerHTML = "";
@@ -293,7 +282,6 @@ document.addEventListener("DOMContentLoaded", function () {
         .attr("width", x.bandwidth()).attr("height", d => h - y(d.count))
         .attr("fill", "#7c3aed").attr("rx", 4);
 
-      // Dodaj linię Twojej oceny
       if (data.myAvg) {
         svg.append("line")
           .attr("x1", 0).attr("x2", w)
@@ -302,7 +290,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // D3 — top gatunki społeczności
     if (data.topCommunityGenres && typeof d3 !== "undefined") {
       const el2 = document.getElementById("chart-community-genres");
       el2.innerHTML = "";

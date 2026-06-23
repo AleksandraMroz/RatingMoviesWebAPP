@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-// Własne listy użytkownika (poza standardowymi watched/watchlist/favourite)
 const ListSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   name: { type: String, required: true },

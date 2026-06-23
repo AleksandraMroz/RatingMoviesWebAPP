@@ -1,5 +1,4 @@
 (function() {
-  // Quick action buttons: watched/watchlist/favourite
   document.addEventListener("click", function(e) {
     const btn = e.target.closest(".cqa-btn");
     if (!btn) return;
@@ -33,7 +32,6 @@
     }).catch(() => {});
   });
 
-  // Rating modal
   function openRateModal(movieId, title) {
     const modal = document.getElementById("rate-modal");
     if (!modal) return;
@@ -41,12 +39,10 @@
     document.getElementById("rate-modal-title").textContent = title;
     document.getElementById("rate-modal-rating").value = "0";
     document.getElementById("rate-modal-comment").value = "";
-    // Reset stars
     document.querySelectorAll("#rate-modal-stars .star-pick").forEach(s => s.classList.remove("active"));
     modal.style.display = "block";
   }
 
-  // Star picker in modal
   document.addEventListener("DOMContentLoaded", function() {
     const starsContainer = document.getElementById("rate-modal-stars");
     if (starsContainer) {

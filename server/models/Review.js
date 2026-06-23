@@ -9,13 +9,11 @@ const ReviewSchema = new Schema({
   runtime: { type: Number },
   rating: { type: Number, min: 0, max: 5 },
   comment: { type: String },
-  // "watched" i "watchlist" wzajemnie się wykluczają; null = brak statusu
   watchStatus: {
     type: String,
     enum: ["watched", "watchlist", null],
     default: null,
   },
-  // Ulubione jest niezależne — film może być obejrzany I ulubiony
   isFavourite: { type: Boolean, default: false },
   watchedDate: { type: Date },
 }, { timestamps: true });

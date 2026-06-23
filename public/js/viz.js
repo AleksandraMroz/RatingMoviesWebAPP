@@ -1,4 +1,3 @@
-/* viz.js — D3.js dashboard, purple theme */
 
 const VIZ = {
   loaded: false,
@@ -75,7 +74,6 @@ const VIZ = {
         return;
       }
       this.data = await res.json();
-      console.log("dashboard-stats:", this.data); // DEBUG
       this.loaded = true;
       if (loading) loading.style.display = "none";
       this.render(this.data);
@@ -95,7 +93,6 @@ const VIZ = {
     }
     if (empty) empty.style.display = "none";
 
-    // KPI
     const kpis = document.getElementById("viz-kpis");
     if (kpis) kpis.style.display = "grid";
     this.setKpi("kpi-hours", (data.totalHours).toFixed(1).replace(".",",") + " h");
@@ -103,13 +100,11 @@ const VIZ = {
     this.setKpi("kpi-rated", data.ratedCount);
     this.setKpi("kpi-watchlist", (data.watchlistHours ?? Math.round(data.watchlistMinutes / 60)).toFixed(1).replace(".",",") + " h");
 
-    // Pokaż sekcje
     ["viz-charts","viz-row2","viz-row3"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "flex";
     });
 
-    // Wyczyść i przerysuj
     if (data.activityData.length > 0) this.drawHeatmap(data.activityData);
     if (data.genreData.length > 0) this.drawDonut(data.genreData);
     if (data.watchTimeByMonth.length > 0) this.drawWatchTime(data.watchTimeByMonth);
@@ -181,7 +176,6 @@ const VIZ = {
       .on("mousemove", event => this.moveTooltip(event))
       .on("mouseout", () => this.hideTooltip());
 
-    // Etykiety dni
     [["Pon", 0], ["Śr", 2], ["Pt", 4]].forEach(([label, row]) => {
       svg.append("text")
         .attr("x", 0).attr("y", row * step + 32)
@@ -190,7 +184,6 @@ const VIZ = {
         .text(label);
     });
 
-    // Etykiety miesięcy
     const monthsSeen = new Set();
     days.forEach(d => {
       const key = `${d.getFullYear()}-${d.getMonth()}`;
@@ -281,14 +274,12 @@ const VIZ = {
       .paddingInner(0.3).paddingOuter(data.length === 1 ? 0 : 0.15);
     const y = d3.scaleLinear().domain([0, d3.max(data, d => d.hours) * 1.2 || 1]).range([iH, 0]);
 
-    // Gradient
     const defs = svg.append("defs");
     const grad = defs.append("linearGradient").attr("id", "bar-grad")
       .attr("x1", "0").attr("y1", "0").attr("x2", "0").attr("y2", "1");
     grad.append("stop").attr("offset", "0%").attr("stop-color", this.PURPLE);
     grad.append("stop").attr("offset", "100%").attr("stop-color", this.PURPLE_LIGHT);
 
-    // Grid lines
     y.ticks(4).forEach(tick => {
       g.append("line").attr("x1", 0).attr("x2", iW)
         .attr("y1", y(tick)).attr("y2", y(tick))
@@ -308,7 +299,6 @@ const VIZ = {
       .attr("y", d => y(d.hours))
       .attr("height", d => iH - y(d.hours));
 
-    // Wartości nad słupkami
     g.selectAll(".bar-label").data(data).enter().append("text")
       .attr("class", "bar-label")
       .attr("x", d => x(d.month) + x.bandwidth() / 2)
@@ -421,14 +411,12 @@ const VIZ = {
     const x = d3.scalePoint().domain(data.map(d => d.month)).range([0, iW]);
     const y = d3.scaleLinear().domain([0.5, 5.5]).range([iH, 0]);
 
-    // Gradient pod linią
     const defs = svg.append("defs");
     const grad = defs.append("linearGradient").attr("id", "line-area-grad")
       .attr("x1","0").attr("y1","0").attr("x2","0").attr("y2","1");
     grad.append("stop").attr("offset","0%").attr("stop-color", this.PURPLE).attr("stop-opacity", 0.25);
     grad.append("stop").attr("offset","100%").attr("stop-color", this.PURPLE).attr("stop-opacity", 0);
 
-    // Grid
     [1,2,3,4,5].forEach(tick => {
       g.append("line").attr("x1",0).attr("x2",iW)
         .attr("y1",y(tick)).attr("y2",y(tick))
@@ -449,7 +437,6 @@ const VIZ = {
       .attr("stroke-width", 2.5).attr("stroke-linecap","round")
       .attr("d", line);
 
-    // Animacja rysowania linii
     const len = path.node().getTotalLength();
     path.attr("stroke-dasharray", len).attr("stroke-dashoffset", len)
       .transition().duration(1000).ease(d3.easeLinear).attr("stroke-dashoffset", 0);
